@@ -6,9 +6,9 @@
 //  Copyright (c) 2014 Jcaille. All rights reserved.
 //
 
-#include "AffineFitter.h"
+#include "UserAffineFitter.h"
 
-AffineFitter::AffineFitter(cv::Size wantedOutputSize, cv::Mat inputMatrix)
+UserAffineFitter::UserAffineFitter(cv::Size wantedOutputSize, cv::Mat inputMatrix)
 {
     input = inputMatrix;
     outputSize = wantedOutputSize;
@@ -17,7 +17,7 @@ AffineFitter::AffineFitter(cv::Size wantedOutputSize, cv::Mat inputMatrix)
 
 #pragma mark - Define Image by clicking
 
-void AffineFitter::mouseCallback( int event, int x, int y, int flags, void* param )
+void UserAffineFitter::mouseCallback( int event, int x, int y, int flags, void* param )
 {
     std::vector<cv::Point2f> *cornerVector = (std::vector<cv::Point2f>*) param;
     
@@ -33,7 +33,7 @@ void AffineFitter::mouseCallback( int event, int x, int y, int flags, void* para
     }
 }
 
-std::vector<cv::Point2f> AffineFitter::userDefinedInitialCorners()
+std::vector<cv::Point2f> UserAffineFitter::userDefinedInitialCorners()
 {
     std::vector<cv::Point2f> res;
     cv::imshow("Input Image Corners", input);
@@ -54,8 +54,10 @@ std::vector<cv::Point2f> AffineFitter::userDefinedInitialCorners()
     return res;
 }
 
-void AffineFitter::fit(std::vector<cv::Point2f>corners)
+void UserAffineFitter::fit()
 {
+    std::vector<cv::Point2f> corners = userDefinedInitialCorners();
+    
     std::vector<cv::Point2f> outCorners;
     outCorners.push_back(cv::Point2f(0,0));
     outCorners.push_back(cv::Point2f(outputSize.width, 0));

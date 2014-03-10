@@ -11,20 +11,36 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include "UserAffineFitter.h"
+#include "MedianMerger.h"
 
 int main(int argc, const char * argv[])
 {
-    cv::Mat I = cv::imread("/Users/jean/Devel/SI343/CVCanvas/Images/Joconde2.jpg");
-    cv::Mat J = cv::imread("/Users/jean/Devel/SI343/CVCanvas/Images/Joconde.jpg");
+    cv::Mat GT = cv::imread("Brush/GroundTruth.png");
     
-    UserAffineFitter fitter = UserAffineFitter(cv::Size(396, 600), J);
-    fitter.fit();
+    std::vector<cv::Mat> images;
+    std::vector<cv::Mat> fittedImages;
+
+    images.push_back(cv::imread("Brush/0.jpg"));
+    images.push_back(cv::imread("Brush/1.jpg"));
+    images.push_back(cv::imread("Brush/2.jpg"));
+    images.push_back(cv::imread("Brush/3.jpg"));
+
+    for (int i = 0; i < images.size(); ++i)
+    {
+        UserAffineFitter fitter = UserAffineFitter(GT.size(), images[i]);
+        fitter.fit();
+        fittedImages.push_back(fitter.output);
+        cv::imshow("Image", fitter.output);
+        cv::waitKey(0);
+    }
+
+    std::cout << "Merging" << std::endl;
     
-    UserAffineFitter fitter2 = UserAffineFitter(cv::Size(396, 600), I);
-    fitter2.fit();
     
-    cv::imshow("First image", fitter.output);
-    cv::imshow("Second image", fitter2.output);
+    cv::Mat merged = merge(fittedImages);
+    
+    cv::imshow("Merge", merged);
+    
     cv::waitKey(0);
     
     return 0;

@@ -44,13 +44,14 @@ std::vector<cv::Point2f> UserAffineFitter::userDefinedInitialCorners()
     while (res.size() != 4) {
         cv::waitKey(1);
     }
+    cv::setMouseCallback("Input Image Corners", NULL, NULL);
     
     for (int i = 0; i < 4; i++) {
         std::cout << "Point : " << res[i].x << " " << res[i].y << std::endl;
     }
     
-    cv::setMouseCallback("Input Image Corners", NULL, NULL);
-
+    cv::destroyWindow("Input Image Corners");
+    
     return res;
 }
 

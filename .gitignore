@@ -1,14 +1,21 @@
+# Ignore everything
 *.*
 
+# Except directories ...
+!*/
+
+# ... Code ...
 !*.h
 !*.cpp
 
+# ... Images ...
 !*.png
 !*.jpg
 !*.jpeg
 
+# ... Markdown files ...
 !*.md
 !*.markdown
 
+# ... And itself ...
 !.gitignore
-

@@ -20,28 +20,29 @@ void SIFTAffineFitter::fit()
 {
     std::vector<cv::KeyPoint> keypointsInput, keypointsReference;
     Mat descriptorsInput, descriptorsReference;
-    SIFT s;
+    SIFT s, q;
 
     s(input, Mat(), keypointsInput, descriptorsInput);
-    s(reference, Mat(), keypointsReference, descriptorsReference);
+    q(reference, Mat(), keypointsReference, descriptorsReference);
 
     BFMatcher matcher;
     std::vector<DMatch> matches, goodMatches;
     matcher.match(descriptorsInput, descriptorsReference, matches);
-
-    #warning todo : ransac uniquement sur les bons points;
     
     std::vector<Point2f> pointsReference, pointsInput;
     
     float meanDistance = 0.0;
     for(DMatch match : matches)
+    {
         meanDistance += match.distance;
+    }
     
     meanDistance /= matches.size();
 
     float stdDev = 0.0;
-    for(DMatch match : matches)
+    for(DMatch match : matches){
         stdDev = (match.distance - meanDistance) * (match.distance - meanDistance);
+    }
     
     stdDev = sqrt(stdDev / matches.size());
     std::cout << "Mean : " << meanDistance << std::endl;
@@ -49,17 +50,17 @@ void SIFTAffineFitter::fit()
     
     std::cout << "Raw matches : " << matches.size() << std::endl;
     for (DMatch match : matches) {
-        if (match.distance < meanDistance + 1 * stdDev) {
+        if (match.distance < meanDistance + 3 * stdDev) {
             goodMatches.push_back(match);
-            pointsInput.push_back(keypointsInput[match.trainIdx].pt);
-            pointsReference.push_back(keypointsReference[match.queryIdx].pt);
+            pointsInput.push_back(keypointsInput[match.queryIdx].pt);
+            pointsReference.push_back(keypointsReference[match.trainIdx].pt);
         }
     }
     std::cout << "Good matches : " << pointsInput.size() << std::endl;
 
     std::vector<uchar> inliers;
-    Mat homography = findHomography(pointsInput, pointsReference, CV_RANSAC, 10, inliers);
-    
+    Mat homography = findHomography(Mat(pointsInput), Mat(pointsReference), CV_RANSAC, 10, inliers);
+   
     int inliersNumber = 0;
     for (uchar u : inliers) {
         inliersNumber += (int) u;
@@ -68,10 +69,4 @@ void SIFTAffineFitter::fit()
 
     output = Mat(reference.size(), input.type());
     warpPerspective(input, output, homography, reference.size());
-    
-    Mat m;
-    drawMatches(input, keypointsInput, reference, keypointsReference, goodMatches, m, Scalar::all(-1), Scalar::all(-1), (Mat) inliers);
-    imshow("FITTED", output);
-    imshow("Matches", m);
-    waitKey();
 }

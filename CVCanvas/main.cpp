@@ -17,17 +17,20 @@
 
 int main(int argc, const char * argv[])
 {
-    cv::Mat GT = cv::imread("Meduse_fake/ref.png");
+    cv::Mat GT = cv::imread("Brush/GroundTruth.png");
 
     std::vector<cv::Mat> images;
     std::vector<cv::Mat> fittedImages;
 
-    images.push_back(cv::imread("Meduse_fake/1.png"));
-//    images.push_back(cv::imread("Brush/1.jpg"));
-//    images.push_back(cv::imread("Brush/2.jpg"));
-//    images.push_back(cv::imread("Screen/3.jpg"));
-//    images.push_back(cv::imread("Screen/4.jpg"));
-//    images.push_back(cv::imread("Screen/5.jpg"));
+//    images.push_back(cv::imread("Meduse_fake/1_reflet.png"));
+//    images.push_back(cv::imread("Meduse_fake/2_reflet.png"));
+//    images.push_back(cv::imread("Meduse_fake/3_reflet.png"));
+//    images.push_back(cv::imread("Meduse_fake/4_reflet.png"));
+//    images.push_back(cv::imread("Meduse_fake/5_reflet.png"));
+    images.push_back(cv::imread("Brush/0.jpg"));
+    images.push_back(cv::imread("Brush/1.jpg"));
+    images.push_back(cv::imread("Brush/2.jpg"));
+    images.push_back(cv::imread("Brush/3.jpg"));
 
     std::cout << "Fitting" << std::endl;
 
@@ -37,7 +40,6 @@ int main(int argc, const char * argv[])
         SIFTAffineFitter fitter = SIFTAffineFitter(images[i], GT);
         fitter.fit();
         fittedImages.push_back(fitter.output);
-        cv::imshow("Image", fitter.output);
     }
 
     std::cout << "Merging" << std::endl;

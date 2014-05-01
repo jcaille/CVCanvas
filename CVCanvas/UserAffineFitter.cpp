@@ -15,8 +15,6 @@ UserAffineFitter::UserAffineFitter(cv::Size wantedOutputSize, cv::Mat inputMatri
     isDefiningCorners = false;
 }
 
-#pragma mark - Define Image by clicking
-
 void UserAffineFitter::mouseCallback( int event, int x, int y, int flags, void* param )
 {
     std::vector<cv::Point2f> *cornerVector = (std::vector<cv::Point2f>*) param;

@@ -25,15 +25,15 @@ void SIFTAffineFitter::fit()
     s(input, Mat(), keypointsInput, descriptorsInput);
     s(reference, Mat(), keypointsReference, descriptorsReference);
 
-    BFMatcher matcher;
+    BFMatcher matcher(NORM_L2, false);
     std::vector<DMatch> matches, goodMatches;
     matcher.match(descriptorsInput, descriptorsReference, matches);
 
-    #warning todo : ransac uniquement sur les bons points;
+    //#warning todo : ransac uniquement sur les bons points;
     
     std::vector<Point2f> pointsReference, pointsInput;
     
-    float meanDistance = 0.0;
+    /*float meanDistance = 0.0;
     for(DMatch match : matches)
         meanDistance += match.distance;
     
@@ -46,32 +46,34 @@ void SIFTAffineFitter::fit()
     stdDev = sqrt(stdDev / matches.size());
     std::cout << "Mean : " << meanDistance << std::endl;
     std::cout << "StdDev : " << stdDev << std::endl;
-    
-    std::cout << "Raw matches : " << matches.size() << std::endl;
-    for (DMatch match : matches) {
+    */
+    //std::cout << "Raw matches : " << matches.size() << std::endl;
+    /*for (DMatch match : matches) {
         if (match.distance < meanDistance + 1 * stdDev) {
             goodMatches.push_back(match);
             pointsInput.push_back(keypointsInput[match.trainIdx].pt);
             pointsReference.push_back(keypointsReference[match.queryIdx].pt);
         }
     }
+	*/
+	for (unsigned i=0; i<matches.size(); i++) {
+        DMatch match=matches[i];
+        pointsInput.push_back(keypointsInput[match.queryIdx].pt);
+        pointsReference.push_back(keypointsReference[match.trainIdx].pt);
+    }
     std::cout << "Good matches : " << pointsInput.size() << std::endl;
 
     std::vector<uchar> inliers;
-    Mat homography = findHomography(pointsInput, pointsReference, CV_RANSAC, 10, inliers);
-    
-    int inliersNumber = 0;
-    for (uchar u : inliers) {
-        inliersNumber += (int) u;
-    }
-    std::cout << "Inliers : " << inliersNumber << std::endl;
+	for (unsigned i=0; i<pointsInput.size(); i++)
+		inliers.push_back(0);
 
+    Mat homography = findHomography(pointsInput, pointsReference, CV_RANSAC, 15, inliers);
     output = Mat(reference.size(), input.type());
     warpPerspective(input, output, homography, reference.size());
-    
-    Mat m;
-    drawMatches(input, keypointsInput, reference, keypointsReference, goodMatches, m, Scalar::all(-1), Scalar::all(-1), (Mat) inliers);
+	Mat m;
+    drawMatches(input, keypointsInput, reference, keypointsReference, matches, m, Scalar::all(-1), Scalar::all(-1), (Mat) inliers);
     imshow("FITTED", output);
     imshow("Matches", m);
     waitKey();
+	1;
 }

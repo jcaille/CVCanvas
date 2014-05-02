@@ -20,10 +20,10 @@ void SIFTAffineFitter::fit()
 {
     std::vector<cv::KeyPoint> keypointsInput, keypointsReference;
     Mat descriptorsInput, descriptorsReference;
-    SIFT s, q;
+    SIFT s;
 
     s(input, Mat(), keypointsInput, descriptorsInput);
-    q(reference, Mat(), keypointsReference, descriptorsReference);
+    s(reference, Mat(), keypointsReference, descriptorsReference);
 
     BFMatcher matcher(NORM_L2, false);
     std::vector<DMatch> matches, goodMatches;
@@ -69,17 +69,21 @@ void SIFTAffineFitter::fit()
     Mat homography = findHomography(Mat(pointsInput), Mat(pointsReference), CV_RANSAC, 10, inliers);
    
     int inliersNumber = 0;
-    for (uchar u : inliers) {
-        inliersNumber += (int) u;
-    }
+	for (unsigned i = 0; i<inliers.size(); i++)
+	{
+		inliersNumber += (int) inliers[i];
+	}
+	//for (uchar u : inliers) {
+ //       inliersNumber += (int) u;
+ //   }
     std::cout << "Inliers : " << inliersNumber << std::endl;
 
     output = Mat(reference.size(), input.type());
     warpPerspective(input, output, homography, reference.size());
-    
-    Mat m;
-    drawMatches(input, keypointsInput, reference, keypointsReference, goodMatches, m, Scalar::all(-1), Scalar::all(-1), (Mat) inliers);
-    imshow("FITTED", output);
-    imshow("Matches", m);
-    waitKey();
+
+    //Mat m;
+    //drawMatches(input, keypointsInput, reference, keypointsReference, goodMatches, m, Scalar::all(-1), Scalar::all(-1), (Mat) inliers);
+    //imshow("FITTED", output);
+    //imshow("Matches", m);
+    //waitKey();
 }

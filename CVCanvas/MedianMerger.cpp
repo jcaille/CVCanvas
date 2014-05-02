@@ -40,7 +40,6 @@ cv::Mat merge(std::vector<cv::Mat> images)
     
     for (int i = 0; i < res.cols; i++)
     {
-        std::cout << "Col # " << i << " / " << res.cols << std::endl;
         for(int j = 0 ; j < res.rows ; j++)
         {
             std::vector<cv::Scalar_<uchar>> colors;

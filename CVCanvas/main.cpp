@@ -14,11 +14,11 @@
 #include "SIFTAffintFitter.h"
 #include "compare_intensity.h"
 #include "MedianMerger.h"
+#include "TrueMedianMerger.h"
+
 
 int main(int argc, const char * argv[])
 {
-    cv::Mat GT = cv::imread("Brush/GroundTruth.png");
-
     std::vector<cv::Mat> images;
     std::vector<cv::Mat> fittedImages;
 
@@ -27,7 +27,7 @@ int main(int argc, const char * argv[])
 //    images.push_back(cv::imread("Meduse_fake/3_reflet.png"));
 //    images.push_back(cv::imread("Meduse_fake/4_reflet.png"));
 //    images.push_back(cv::imread("Meduse_fake/5_reflet.png"));
-    images.push_back(cv::imread("Brush/0.jpg"));
+//    images.push_back(cv::imread("Brush/0.jpg"));
     images.push_back(cv::imread("Brush/1.jpg"));
     images.push_back(cv::imread("Brush/2.jpg"));
     images.push_back(cv::imread("Brush/3.jpg"));
@@ -35,12 +35,20 @@ int main(int argc, const char * argv[])
     std::cout << "Fitting" << std::endl;
 
     
-    for (int i = 0; i < images.size(); ++i)
+    for (unsigned i = 0; i < images.size(); ++i)
     {
-        SIFTAffineFitter fitter = SIFTAffineFitter(images[i], GT);
+        SIFTAffineFitter fitter = SIFTAffineFitter(images[i], images[0]);
         fitter.fit();
         fittedImages.push_back(fitter.output);
     }
+	
+	for (unsigned i=0; i<images.size(); i++)
+	{
+		std::stringstream ss;
+		ss << i;
+		cv::imshow(ss.str(),fittedImages[i]);
+	}
+	cv::waitKey();
 
     std::cout << "Merging" << std::endl;
     
@@ -49,7 +57,10 @@ int main(int argc, const char * argv[])
     
     cv::imshow("Merge", merged);
     
-    cv::waitKey(0);
+	TrueMedianMerger tmm(fittedImages);
+	cv::imshow("True Merge", tmm.output);
+
+    cv::waitKey();
     
     return 0;
 }

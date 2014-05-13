@@ -17,5 +17,9 @@
 !*.md
 !*.markdown
 
+# ... Latex ...
+!*.tex
+!*.pdf
+
 # ... And itself ...
 !.gitignore

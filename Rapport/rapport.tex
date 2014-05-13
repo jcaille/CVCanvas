@@ -1,0 +1,97 @@
+\documentclass[12pt,a4paper]{article}
+%-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------       Package
+\usepackage[utf8]{inputenc}
+\usepackage[left=2.5cm, right=2.5cm, top=3.2cm, bottom=2cm, headsep=2.5cm]{geometry}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{float}
+
+%----- ABSTRACT
+
+%----- En tête
+
+\title{Reconstruction d'un tableau sans reflets à partir de photos prises sous des angles différents}
+\date{13 Mars 2014}
+\author{Théophile DALENS et Jean CAILLÉ}
+
+\begin{document}
+\maketitle
+
+%------------------------------------------> SECTION Introduction
+\section{Introduction}
+Il devient aujourd'hui facile d'obtenir des photos de chef-d'oeuvre dans un musée. Toutefois la présence de lumière couplés aux vernis et aux cadre en verres entraine sur la pluspart des photos prisent des reflets peu plaisants à l'oeil. En multipliant les points de vue, nous allons voir qu'il est possible de supprimer ces reflets et d'obtenir une photo proche de celle prise dans des conditions idéalles.
+
+%------------------------------------------> SECTION Méthode
+\section{Méthode}
+
+La méthode proposée par l'article ne s'attache pas à traiter le tableau sous l'angle de la reconnaissance d'image (reconnaitre par exemple les aplats de couleurs et supprimer les reflets à partir de cette information), mais uniquement grâce à des techniques génériques, permettant leur application sur la pluspart des tableaux. L'idée consiste à prendre plusieurs photos du même tableau sous différents angles. Les reflets ne dégraderons pas alors la même zone du tableau sur les différentes images et nous pourrons reconstruire à partir de ces images une image "virtuelle" sans reflets.
+
+L'algorithme suggéré par l'article se décompose en deux parties. Tout d'abord, les images sont "recaléss" afin d'obtenir une perspective commune. Ainsi, les pixels des différentes images correspondent aux mêmes zones sur le tableaux, et il devient plus facile de reconstruire l'image corrigée. La seconde partie correspond justement à cette reconstructions. Plusieurs méthodes sont suggérées et nous nous sommes attachés à implémenter et comparer les différentes méthodes de fusion d'image proposées.
+
+%---------------------------------------------------> SUB SECTION Recalage des images
+\subsection{Recalage des images}
+
+Comme décrit plus haut, la première partie revient à "recaler" les images entre elles, c'est à dire simuler une perspective commune entre les photos. Sois nous pouvons nous attacher à modifier toutes les photos pour recaler l'image du tableau sur un rectangle donné, mais cela nécessite une connaissance \emph{à priori} des dimensions du tableau, que nous ne connaissons pas. Pour palier à ce problème, nous choisissons parmis les images de la peinture une photo dite de \emph{référence} et nous recadrerons les autres pour les afficher sous cette perspective.\\
+
+Dans le cas où la caméra est idéale (modèle sténopé, pas de déformation dues à la lentille), et le tableau est parfaitement plan, la transormation permettant de recaler un tableau est une perspective. Nous n'avons pas eu besoin lors de nos traitement d'hypothèses supplémentaires.
+
+%------------------------------------------------------------> SUB SUB SECTION Recalage manuel
+\subsubsection{Recalage manuel}
+Pour trouver la perspective liant deux images données, la solution la plus simple est de demander à l'utilisateur de cliquer sur 4 points communs entre les deux photos (par exemple les quatre coins du tableau), et de trouver la transformation permettant de passer de $\{p_i\}_{i=1...4}$ à  $\{q_i\}_{i=1...4}$. C'est cette solution que nous avons tout d'abord implémenté. Les résultats était satisfaisant au premier abord, mais la précision de la méthode n'était pas suffisante pour la suite du traitement. En effet, l'utilisateur ne peut cliquer qu'avec une précision de quelques pixels. Nous avons alors du nous orienter vers une méthode automatisé faisant appel à ds descripteurs locaux.
+
+%------------------------------------------------------------> SUB SUB SECTION Recalage automatique avec utilisation des  SIFT
+\subsubsection{Recalage automatique avec utilisation des  SIFT}
+
+Pour obtenir une précision sous-pixellique, nous extrayons des points d'intérêt de type SIFT [3] de manière automatique sur es deux images. En supposant que la pluspart des points d'intérêt sont communs sur les deux images, nous pouvons rechercher des correspondance point-à-point en se servant des descripteurs (Figure 1). Nous pouvons alors chercher la meilleur homographie permettant de faire correspondre les descripteurs de la première image à ceux de la seconde image. Comme l'algorithme SIFT peut fournir des points qui ne sont pas parfaits (correspondance entre deux zones très éloignées dans la réalité par exemple), nous avons utilisé la méthode RANSAC [1] pour filtrer les bonnes correspondance et obtenir le recalage (Figure 2 et 3). Ce recalage s'est avéré suffisant pour la suite de l'algorithme.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\textwidth]{Fig/sift_raw.png}
+  \caption{Paires de descripteurs SIFT entre les deux images avant filtrage par RANSAC}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\textwidth]{Fig/sift_ransac.png}
+  \caption{Paires de descripteurs SIFT estimés correctes par l'algorithme RANSAC et utilisés pour renconstruire la perspective}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.30\textwidth]{Fig/working.png}
+  \includegraphics[width=0.30\textwidth]{Fig/reference_image.png}
+  \includegraphics[width=0.30\textwidth]{Fig/fitted.png}
+
+  \caption{A gauche : image de travail, au centre : image de référence, à droite : image de travail après recalage par rapport à l'image de référence. Noter la différence de position des reflets entre l'image de référence et l'image recalée}
+\end{figure}
+
+%---------------------------------------------------> SUB SECTION Fusion des images
+\subsection{Fusion des images}
+
+%------------------------------------------------------------> SUB SUB SECTION Fusion par minimum
+\subsubsection{Fusion par minimum}
+
+%------------------------------------------------------------> SUB SUB SECTION Fusion par médianne vectorielle
+\subsubsection{Fusion par médianne vectorielle}
+
+%------------------------------------------------------------> SUB SUB SECTION Fusion dans l'espace gradient
+\subsubsection{Fusion dans l'espace gradient}
+
+%------------------------------------------> SECTION Implémentation
+\section{Implémentation}
+
+Pour l'implémentation de la méthode décrite ci-dessus, nous avons choisi des outils C++ accompagné de la librarie OpenCV [REFERENCE] de traitement d'image. La collaboration a été réalisé grâce au gestionnaire de version git [REFERENCE]. La totalité du code et ses révisions antérieures sont donc disponible sur Github : http://github.com/jcaille/CVCanvas
+
+%------------------------------------------> SECTION Résultats
+\section{Résultats}
+
+%------------------------------------------> SECTION Améliorations possibles
+\section{Améliorations possibles}
+
+Plusieurs amélioration de l'algorithmes sont envisageables. Si les images obtenues sont de bonne qualité, l'lgorithme ne sait pas faire la différence entre les zones de la peinture et les zones extérieures (cadre, mur, paysage, ...), dans lesquelles la fusion est effectuée alors qu'elle n'a pas de sens. Une possibilité pour détecter ces zones et de segmenter l'image de référence (par exemple en utilisant des snakes quadrangulaires) entre un "intérieur" sur lequel la fusion serait effectué et un extérieur sur lequel on garderait le contenu d'origine. Pour s'aider dans cette segmentation, nous pourrions utiliser les informations des autres photos du tableau.
+
+De plus, l'algorithme que nous avons développé (en particulier la partie de fusion) n'est pas de fait résistant aux changements de contrastes en général. Une idée pour corriger ce défaut serait d'égaliser les histogrammes les différentes images (de préférence en limitant cette égalisation à la zone "intérieur" du tableau).
+
+\end{document}

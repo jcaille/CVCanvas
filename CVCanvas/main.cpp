@@ -48,7 +48,7 @@ int main(int argc, const char * argv[])
 		ss << i;
 		cv::imshow(ss.str(),fittedImages[i]);
 	}
-	cv::waitKey();
+//	cv::waitKey();
 
     std::cout << "Merging" << std::endl;
     
@@ -56,9 +56,11 @@ int main(int argc, const char * argv[])
     cv::Mat merged = merge(fittedImages);
     
     cv::imshow("Merge", merged);
+    cv::imwrite("/tmp/medianMerge.png", merged);
     
 	TrueMedianMerger tmm(fittedImages);
 	cv::imshow("True Merge", tmm.output);
+    cv::imwrite("/tmp/trueMerge.png", tmm.output);
 
     cv::waitKey();
     

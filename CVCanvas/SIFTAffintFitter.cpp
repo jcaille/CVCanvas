@@ -49,7 +49,7 @@ void SIFTAffineFitter::fit()
     std::cout << "Mean : " << meanDistance << std::endl;
     std::cout << "StdDev : " << stdDev << std::endl;
     */
-    //std::cout << "Raw matches : " << matches.size() << std::endl;
+    //std::cout << "Raw matches : " << matches.size() << std::endl;/private/tmp/matches.png
     /*for (DMatch match : matches) {
         if (match.distance < meanDistance + 3 * stdDev) {
             goodMatches.push_back(match);
@@ -73,17 +73,19 @@ void SIFTAffineFitter::fit()
 	{
 		inliersNumber += (int) inliers[i];
 	}
-	//for (uchar u : inliers) {
- //       inliersNumber += (int) u;
- //   }
+//	for (uchar u : inliers) {
+//        inliersNumber += (int) u;
+//    }
+    
     std::cout << "Inliers : " << inliersNumber << std::endl;
 
     output = Mat(reference.size(), input.type());
     warpPerspective(input, output, homography, reference.size());
 
-    //Mat m;
-    //drawMatches(input, keypointsInput, reference, keypointsReference, goodMatches, m, Scalar::all(-1), Scalar::all(-1), (Mat) inliers);
-    //imshow("FITTED", output);
-    //imshow("Matches", m);
-    //waitKey();
+    Mat m;
+    drawMatches(input, keypointsInput, reference, keypointsReference, matches, m, Scalar::all(-1), Scalar::all(-1), (Mat) inliers);
+    imshow("Matches", m);
+    imwrite("/tmp/working.png", input);
+    imwrite("/tmp/fitted.png", output);
+//    waitKey();
 }

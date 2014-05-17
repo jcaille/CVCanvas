@@ -215,7 +215,15 @@ GradientMedianMerger::GradientMedianMerger(std::vector<cv::Mat> images) : images
 					allGradients[int(indexes.at<uchar>(j,i))][c][1].at<float>(j,i)+
 					allGradients[int(indexes.at<uchar>(j-1,i))][c][1].at<float>(j-1,i);
 	displayFloatMat(divGradRes[0], "example of resultat Laplacian image");
-
+	//FileStorage fs("C:/4a/Telecom/SI343/a0.xml", FileStorage::WRITE);
+	//fs << "a0" << divGradRes[0];
+	//fs.release();
+	//FileStorage fs1("C:/4a/Telecom/SI343/a1.xml", FileStorage::WRITE);
+	//fs1 << "a1" << divGradRes[1];
+	//fs1.release();
+	//FileStorage fs2("C:/4a/Telecom/SI343/a2.xml", FileStorage::WRITE);
+	//fs2 << "a2" << divGradRes[2];
+	//fs2.release();
 
 	Mat orig;
 	spl[0][0].convertTo(orig, CV_32F);

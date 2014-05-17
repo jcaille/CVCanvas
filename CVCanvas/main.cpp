@@ -13,10 +13,7 @@
 
 #include "ImageLoader.h"
 #include "ImageFitter.h"
-
-#include "compare_intensity.h"
-#include "MedianMerger.h"
-#include "TrueMedianMerger.h"
+#include "ImageMerger.h"
 
 // This project demonstrate the artifact removing technique described in
 // http://www.dtic.upf.edu/~gharo/Download/paintings_siims_no_compression.pdf
@@ -28,7 +25,9 @@
 // Everything can be configured with those arguments :
 
 ImageLoaderSet set = MAN_SUBSET;
-FitStrategy strategy = SIFT;
+FitStrategy fitStrategy = SIFT;
+MergeStrategy mergeStrategy = MEDIAN;
+
 int main(int argc, const char * argv[])
 {
     std::vector<cv::Mat> images;
@@ -38,7 +37,7 @@ int main(int argc, const char * argv[])
     
     std::cout << "Fitting" << std::endl;
 
-    fit(images, images[0], strategy, fittedImages);
+    fit(images, images[0], fitStrategy, fittedImages);
     
 	for (unsigned i=0; i<images.size(); i++)
 	{
@@ -50,14 +49,9 @@ int main(int argc, const char * argv[])
     std::cout << "Merging" << std::endl;
     
     
-    cv::Mat merged = merge(fittedImages);
+    cv::Mat merged = merge(fittedImages, mergeStrategy);
     
     cv::imshow("Merge", merged);
-    cv::imwrite("/tmp/medianMerge.png", merged);
-    
-	TrueMedianMerger tmm(fittedImages);
-	cv::imshow("True Merge", tmm.output);
-    cv::imwrite("/tmp/trueMerge.png", tmm.output);
 
     std::cout << "Done" << std::endl;
     

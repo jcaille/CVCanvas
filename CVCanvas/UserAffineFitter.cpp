@@ -15,6 +15,7 @@ UserAffineFitter::UserAffineFitter(cv::Mat referenceImage)
 
 }
 
+// Called each time a mouse event fires
 void UserAffineFitter::mouseCallback( int event, int x, int y, int flags, void* param )
 {
     std::vector<cv::Point2f> *cornerVector = (std::vector<cv::Point2f>*) param;

@@ -22,6 +22,7 @@
 typedef enum MergeStrategy
 {
     AVERAGE,
+    MINIMUM,
     MEDIAN,
     VECTOR_MEDIAN,
     GRADIENT_MEDIAN,

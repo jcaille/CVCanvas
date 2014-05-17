@@ -91,6 +91,28 @@ cv::Scalar_<uchar> average(std::vector<cv::Scalar_<uchar>> colors)
     return ucharRes;
 }
 
+/**
+ *  This function computes the minimum of each component
+ *
+ *  @param colors The colors
+ *
+ *  @return The average color
+ */
+cv::Scalar_<uchar> minimum(std::vector<cv::Scalar_<uchar>> colors)
+{
+    cv::Scalar_<uchar> res(0);
+    for (int i = 0; i < 4; i++) {
+        // For each component
+        std::vector<uchar> values;
+        for (unsigned int j = 0; j < colors.size(); j++) {
+            values.push_back(colors[j][i]);
+        }
+        sort(values.begin(), values.end());
+        res[i] = values[0];
+    }
+    return res;
+}
+
 cv::Mat merge(std::vector<cv::Mat> images, MergeStrategy strategy)
 {
     if (strategy == GRADIENT_MEDIAN) {
@@ -116,6 +138,9 @@ cv::Mat merge(std::vector<cv::Mat> images, MergeStrategy strategy)
                 }
                 if(strategy == VECTOR_MEDIAN){
                     res.at<cv::Scalar_<uchar>>(j,i) = vectorMedian(colors);
+                }
+                if(strategy == MINIMUM){
+                    res.at<cv::Scalar_<uchar>>(j,i) = minimum(colors);
                 }
             }
         }

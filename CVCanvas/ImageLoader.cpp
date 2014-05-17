@@ -34,13 +34,6 @@ void loadImage(ImageLoaderSet set, std::vector<cv::Mat>& images)
             fileNames.push_back("Brush/2.jpg");
             fileNames.push_back("Brush/3.jpg");
             break;
-        case MAN_SUBSET:
-            fileNames.push_back("Man/0.jpg");
-            fileNames.push_back("Man/1.jpg");
-            fileNames.push_back("Man/2.jpg");
-            fileNames.push_back("Man/3.jpg");
-            fileNames.push_back("Man/4.jpg");
-            break;
         case MAN_ALL:
             fileNames.push_back("Man/0.jpg");
             fileNames.push_back("Man/1.jpg");
@@ -59,8 +52,24 @@ void loadImage(ImageLoaderSet set, std::vector<cv::Mat>& images)
             fileNames.push_back("Meduse_fake/3_reflet.png");
             fileNames.push_back("Meduse_fake/4_reflet.png");
             fileNames.push_back("Meduse_fake/5_reflet.png");
-
             break;
+        case PINK:
+            fileNames.push_back("Pink/30.jpg");
+            fileNames.push_back("Pink/31.jpg");
+            break;
+        case MAN_RIGHT:
+            fileNames.push_back("Man_Right/16.jpg");
+            fileNames.push_back("Man_Right/21.jpg");
+            fileNames.push_back("Man_Right/24.jpg");
+            fileNames.push_back("Man_Right/26.jpg");
+            fileNames.push_back("Man_Right/1.jpg");
+            fileNames.push_back("Man_Right/8.jpg");
+            break;
+        case BRUSH_FITTED:
+            fileNames.push_back("Brush_Fitted/46.jpg");
+            fileNames.push_back("Brush_Fitted/47.jpg");
+            fileNames.push_back("Brush_Fitted/48.jpg");
+            fileNames.push_back("Brush_Fitted/49.jpg");
         default:
             break;
     }

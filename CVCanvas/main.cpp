@@ -24,7 +24,7 @@
 // The implementartion has been divided in multiple classes and files to be easy to use
 // Everything can be configured with those arguments :
 
-ImageLoaderSet set = MAN_SUBSET;
+ImageLoaderSet set = MAN_RIGHT;
 FitStrategy fitStrategy = SIFT;
 MergeStrategy mergeStrategy = MEDIAN;
 
@@ -42,12 +42,11 @@ int main(int argc, const char * argv[])
 	for (unsigned i=0; i<images.size(); i++)
 	{
 		std::stringstream ss;
-		ss << i;
+		ss << "Fitted image " << i;
 		cv::imshow(ss.str(),fittedImages[i]);
 	}
 
     std::cout << "Merging" << std::endl;
-    
     
     cv::Mat merged = merge(fittedImages, mergeStrategy);
     

@@ -25,8 +25,10 @@
 typedef enum ImageLoderSet {
     BRUSH_ODD,
     BRUSH_ALL,
-    MAN_SUBSET,
     MAN_ALL,
+    MAN_RIGHT,
+    BRUSH_FITTED,
+    PINK,
     MEDUSE,
 }ImageLoaderSet;
 

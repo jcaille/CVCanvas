@@ -8,8 +8,9 @@
 
 #include "UserAffineFitter.h"
 
-UserAffineFitter::UserAffineFitter(cv::Mat referenceImage)
+UserAffineFitter::UserAffineFitter(cv::Mat referenceImage, int flags)
 {
+    flags = flags;
     input = referenceImage;
     referenceCorners = userDefinedInitialCorners(referenceImage);
 
@@ -35,7 +36,7 @@ void UserAffineFitter::mouseCallback( int event, int x, int y, int flags, void* 
 std::vector<cv::Point2f> UserAffineFitter::userDefinedInitialCorners(cv::Mat image)
 {
     std::vector<cv::Point2f> res;
-    cv::imshow("Input Image Corners", input);
+    cv::imshow("Input Image Corners", image);
     std::cout << "Please click on each corner, starting from the top-left one, in clockwise order" << std::endl ;
     
     cv::setMouseCallback("Input Image Corners", this->mouseCallback, (void*) &res);
@@ -57,9 +58,16 @@ std::vector<cv::Point2f> UserAffineFitter::userDefinedInitialCorners(cv::Mat ima
 cv::Mat UserAffineFitter::fit(cv::Mat inputImage)
 {
     std::vector<cv::Point2f> corners = userDefinedInitialCorners(inputImage);
-    cv::Mat perspective = cv::getPerspectiveTransform(corners, referenceCorners);
+    cv::Mat perspective;
     
-    cv::Mat output = cv::Mat(input.size(), input.type());
-    cv::warpPerspective(input, output, perspective, input.size());
+    if (flags & CV_WARP_INVERSE_MAP) {
+        perspective = cv::getPerspectiveTransform(referenceCorners, corners);
+    } else {
+        perspective = cv::getPerspectiveTransform(referenceCorners, corners);
+    }
+    
+    
+    cv::Mat output = cv::Mat(input.size(),input.type());
+    cv::warpPerspective(inputImage, output, perspective, inputImage.size(), flags);
     return output;
 }

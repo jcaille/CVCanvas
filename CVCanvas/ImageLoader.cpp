@@ -26,7 +26,6 @@ void loadImage(ImageLoaderSet set, std::vector<cv::Mat>& images)
         case BRUSH_ODD:
             fileNames.push_back("Brush/0.jpg");
             fileNames.push_back("Brush/1.jpg");
-            fileNames.push_back("Brush/2.jpg");
             break;
         case BRUSH_ALL:
             fileNames.push_back("Brush/0.jpg");

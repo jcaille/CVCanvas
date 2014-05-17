@@ -24,9 +24,11 @@
 // The implementartion has been divided in multiple classes and files to be easy to use
 // Everything can be configured with those arguments :
 
-ImageLoaderSet set = MAN_RIGHT;
-FitStrategy fitStrategy = SIFT;
-MergeStrategy mergeStrategy = MEDIAN;
+ImageLoaderSet set = PINK;
+
+FitStrategy fitStrategy = USER;
+
+MergeStrategy mergeStrategy = AVERAGE;
 
 int main(int argc, const char * argv[])
 {
@@ -47,7 +49,10 @@ int main(int argc, const char * argv[])
 		ss << "Fitted image " << i;
 		cv::imshow(ss.str(),fittedImages[i]);
 	}
-
+    
+    cv::imwrite("/tmp/reference.png", images[0]);
+    cv::imwrite("/tmp/fitted.png", fittedImages[1]);
+    
     std::cout << "Merging" << std::endl;
     
     cv::Mat merged = merge(fittedImages, mergeStrategy);
@@ -55,7 +60,8 @@ int main(int argc, const char * argv[])
     cv::imshow("Merge", merged);
 
     std::cout << "Done" << std::endl;
-    
+    cv::imwrite("/tmp/merge.png", merged);
+
     cv::waitKey();
     
     return 0;

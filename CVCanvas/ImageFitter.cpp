@@ -12,13 +12,13 @@
 
 
 
-void fit(std::vector<cv::Mat>& inputImages, cv::Mat referenceImage, FitStrategy strategy, std::vector<cv::Mat>& fittedImages)
+void fit(std::vector<cv::Mat>& inputImages, cv::Mat referenceImage, FitStrategy strategy, std::vector<cv::Mat>& fittedImages, int flags)
 {
     fittedImages.clear();
 
     if(strategy == USER)
     {
-        UserAffineFitter userFitter(referenceImage);
+        UserAffineFitter userFitter(referenceImage, flags);
         for(int i = 0 ; i < inputImages.size() ; i++)
         {
             fittedImages.push_back(userFitter.fit(inputImages[i]));
@@ -26,7 +26,7 @@ void fit(std::vector<cv::Mat>& inputImages, cv::Mat referenceImage, FitStrategy 
     }
     else if(strategy == SIFT)
     {
-        SIFTAffineFitter siftFitter(referenceImage);
+        SIFTAffineFitter siftFitter(referenceImage, flags);
         for(int i = 0 ; i < inputImages.size() ; i++)
         {
             fittedImages.push_back(siftFitter.fit(inputImages[i]));

@@ -82,9 +82,11 @@ cv::Scalar_<uchar> average(std::vector<cv::Scalar_<uchar>> colors)
     cv::Scalar_<float> res(0);
     for (int i = 0; i < 4; i++) {
         // For each component
+        float r = 0.0;
         for (unsigned int j = 0; j < colors.size(); j++) {
-            res[j] += colors[i][j] * 1.0 / colors.size() ;
+            r += colors[j][i] * 1.0 / colors.size() ;
         }
+        res[i] = (uchar)r;
     }
 
     cv::Scalar_<uchar> ucharRes = res;

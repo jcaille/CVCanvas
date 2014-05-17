@@ -20,13 +20,14 @@
 
 class SIFTAffineFitter{
     cv::Mat reference;
+    int flags;
     
 public:
 
     /**
      *  Creates the fitter with the given reference image.
      */
-    SIFTAffineFitter(cv::Mat referenceImage);
+    SIFTAffineFitter(cv::Mat referenceImage, int flags);
     
     /**
      *  Fits the input image with respect to the reference image of the fitter

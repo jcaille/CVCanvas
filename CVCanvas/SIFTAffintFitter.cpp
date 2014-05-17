@@ -10,8 +10,9 @@
 
 using namespace cv;
 
-SIFTAffineFitter::SIFTAffineFitter(cv::Mat referenceImage)
+SIFTAffineFitter::SIFTAffineFitter(cv::Mat referenceImage, int flags)
 {
+    flags = flags;
     reference = referenceImage;
     SIFT s;
     s(reference, Mat(), keypointsReference, descriptorsReference);
@@ -39,8 +40,16 @@ cv::Mat SIFTAffineFitter::fit(cv::Mat inputImage)
     std::cout << "    Good matches : " << pointsInput.size() << std::endl;
 
     std::vector<uchar> inliers;
-    Mat homography = findHomography(Mat(pointsInput), Mat(pointsReference), CV_RANSAC, 10, inliers);
-   
+    Mat homography;
+    if (flags & CV_WARP_INVERSE_MAP) {
+        homography = findHomography(Mat(pointsReference), Mat(pointsInput), CV_RANSAC, 10, inliers);
+    } else {
+        homography = findHomography(Mat(pointsInput), Mat(pointsReference), CV_RANSAC, 10, inliers);
+    }
+    
+    Mat output(reference.size(), inputImage.type());
+    warpPerspective(inputImage, output, homography, reference.size(), flags);
+    
     int inliersNumber = 0;
 	for (unsigned i = 0; i<inliers.size(); i++)
 	{
@@ -48,10 +57,7 @@ cv::Mat SIFTAffineFitter::fit(cv::Mat inputImage)
 	}
     
     std::cout << "   Inliers : " << inliersNumber << std::endl;
-
-    Mat output(reference.size(), inputImage.type());
-    warpPerspective(inputImage, output, homography, reference.size());
-
+    
 #if 0
     
     Mat m;

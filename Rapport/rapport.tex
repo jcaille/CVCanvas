@@ -23,14 +23,16 @@
 
 %------------------------------------------> SECTION Introduction
 \section{Introduction}
-Il devient aujourd'hui facile d'obtenir des photos de chef-d'oeuvre dans un musée. Toutefois la présence de lumière couplés aux vernis et aux cadre en verres entraine sur la plupart des photos prisent des reflets peu plaisants à l'oeil. En multipliant les points de vue, nous allons voir qu'il est possible de supprimer ces reflets et d'obtenir une photo proche de celle prise dans des conditions idéales.
+Il devient aujourd'hui facile d'obtenir des photos de chefs-d'oeuvre dans un musée. Toutefois la présence de lumières couplés aux vernis et aux cadre en verres entraine sur la plupart des photos prises des reflets peu plaisants à l'oeil. En multipliant les points de vue, nous allons voir qu'il est possible de supprimer ces reflets et d'obtenir une photo proche de celle prise dans des conditions idéales.
 
 %------------------------------------------> SECTION Méthode
 \section{Méthode}
 
-La méthode proposée par l'article ne s'attache pas à traiter le tableau sous l'angle de la reconnaissance d'image (reconnaitre par exemple les aplats de couleurs et supprimer les reflets à partir de cette information), mais uniquement grâce à des techniques génériques, permettant leur application sur la pluspart des tableaux. L'idée consiste à prendre plusieurs photos du même tableau sous différents angles. Les reflets ne dégraderons pas alors la même zone du tableau sur les différentes images et nous pourrons reconstruire à partir de ces images une image "virtuelle" sans reflets.
+La méthode proposée par l'article ne s'attache pas à traiter le tableau sous l'angle de la reconnaissance d'image (reconnaitre par exemple les aplats de couleurs et supprimer les reflets à partir de cette information), mais uniquement grâce à des techniques génériques, permettant leur application sur la pluspart des tableaux. L'idée consiste à prendre plusieurs photos du même tableau sous différents angles. Les reflets ne dégraderons pas alors la même zone du tableau sur les différentes images et nous pourrons reconstruire à partir de ces images une image "virtuelle" sans reflets.\\
 
 L'algorithme suggéré par l'article se décompose en deux parties. Tout d'abord, les images sont "recaléss" afin d'obtenir une perspective commune. Ainsi, les pixels des différentes images correspondent aux mêmes zones sur le tableaux, et il devient plus facile de reconstruire l'image corrigée. La seconde partie correspond justement à cette reconstructions. Plusieurs méthodes sont suggérées et nous nous sommes attachés à implémenter et comparer les différentes méthodes de fusion d'image proposées.
+
+FIGURE - 3 ETAPES
 
 %---------------------------------------------------> SUB SECTION Recalage des images
 \subsection{Recalage des images}
@@ -41,12 +43,43 @@ Dans le cas où la caméra est idéale (modèle sténopé, pas de déformation d
 
 %------------------------------------------------------------> SUB SUB SECTION Recalage manuel
 \subsubsection{Recalage manuel}
-Pour trouver la perspective liant deux images données, la solution la plus simple est de demander à l'utilisateur de cliquer sur 4 points communs entre les deux photos (par exemple les quatre coins du tableau), et de trouver la transformation permettant de passer de $\{p_i\}_{i=1...4}$ à  $\{q_i\}_{i=1...4}$. C'est cette solution que nous avons tout d'abord implémenté. Les résultats était satisfaisant au premier abord, mais la précision de la méthode n'était pas suffisante pour la suite du traitement. En effet, l'utilisateur ne peut cliquer qu'avec une précision de quelques pixels. Nous avons alors du nous orienter vers une méthode automatisé faisant appel à ds descripteurs locaux.
+Pour trouver la perspective liant deux images données, la solution la plus simple est de demander à l'utilisateur de cliquer sur 4 points communs entre les deux photos (par exemple les quatre coins du tableau). On obtient alors 2 quadrilatères quelconques, définis par les points ${p_i}_{i = 1...4}$ dans l'image de référence et ${p_i}_{i = 1...4}$ dans l'image que  l'on souhaite recaler.
+On peut à partir ce ces points trouver une perspective permettant de passer du premier quadrilatère à l'autre, en effet, il existe en effet une et unique matrice $M$ en coordonées homogènes tel que
+
+$$ \forall i \in \{1...4\}, q_i = M p_i $$
+
+Une fois que nous avons trouvé la matrice $M$, il est possible de redresser l'image pour que les deux quadrilatères coincides, en appliquant la perspective définie par M. \\
+
+Toutefois, il est peu probable que les valeurs de l'image de référence à échantilloner aient des coordonées entières (\emph{e.g.} des pixels). Nous devons donc pouvoir interpoler l'image de référence pour construire l'image redréssée. Plusieurs méthodes sont alors possible :
+
+\paragraph{Interpolation au plus proche}
+Pour trouver la valeur du pixel $(x,y)$ dans l'image de référence, on arrondi simplement les deux nombres pour tomber su un pixel. Cette méthode est simple à utiliser, mais moins précise que l'interpolation linéaire.
+
+\paragraph{Interpolation Bilinéaire}
+Dans cette méthode, pour trouver la valeur du pixel $(x,y)$, on observe les 4 valeur des pixels les plus proches et on interpole bilinéairement.
+
+En pratique, nous avons choisi d'interpoller l'image de façon bilinéaire, plus précise et donc plus adaptée au travail de fusion qui viendra par la suite
+
+\paragraph{Problème avec la méthode manuelle}
+
+En pratique, cette méthode de recalage manuelle n'est pas utilisable pour plusieurs raisons. D'une part, le temps nécessaire pour définir les coins de chaques peinture est relativement long. D'autre part, la précision obtenue lors de nos test n'est pas suffisante pour l'étape suivante du traitement. En effet, l'utilisateur ne peux cliquer qu'avec une précision de quelques pixels au plus. Pour palier à ces problèmes, l'article suggère une solution plus automatisée, faisant appel à des descripteurs locaux.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.45\textwidth]{Fig/User_reference.png}
+  \includegraphics[width=0.45\textwidth]{Fig/User_fitted.png}\\ \vspace{0.1cm}
+  \includegraphics[width=0.45\textwidth]{Fig/User_average.png}
+
+
+  \caption{En haut : Image de référence et image après recalage avec la méthode manuelle. En bas : Superposition des deux images. On observe des zones (particulièrement en bas à gauche) ou le recalage n'est pas bon.}
+\end{figure}
 
 %------------------------------------------------------------> SUB SUB SECTION Recalage automatique avec utilisation des  SIFT
 \subsubsection{Recalage automatique avec utilisation des  SIFT}
 
-Pour obtenir une précision sous-pixellique, nous extrayons des points d'intérêt de type SIFT~\citep{lowe1999object} de manière automatique sur es deux images. En supposant que la plupart des points d'intérêt sont communs sur les deux images, nous pouvons rechercher des correspondance point-à-point en se servant des descripteurs (Figure 1). Nous pouvons alors chercher la meilleur homographie permettant de faire correspondre les descripteurs de la première image à ceux de la seconde image. Comme l'algorithme SIFT peut fournir des points qui ne sont pas parfaits (correspondance entre deux zones très éloignées dans la réalité par exemple), nous avons utilisé la méthode RANSAC~\citep{fischler1981random} pour filtrer les bonnes correspondance et obtenir le recalage (Figure 2 et 3). Ce recalage s'est avéré suffisant pour la suite de l'algorithme.
+Pour obtenir une précision sous-pixellique, nous extrayons des points d'intérêt de type SIFT~\citep{lowe1999object} de manière automatique sur es deux images. En supposant que la plupart des points d'intérêt sont communs sur les deux images, nous pouvons rechercher des correspondance point-à-point en se servant des descripteurs (Figure 1). 
+
+Nous pouvons alors chercher la meilleur homographie permettant de faire correspondre les descripteurs de la première image à ceux de la seconde image. Comme l'algorithme SIFT peut fournir des points qui ne sont pas parfaits (correspondance entre deux zones très éloignées dans la réalité par exemple), nous avons utilisé la méthode RANSAC~\citep{fischler1981random} pour filtrer les bonnes correspondance et obtenir le recalage (Figure 2 et 3). Ce recalage s'est avéré suffisant pour la suite de l'algorithme.
 
 \begin{figure}[H]
   \centering
@@ -93,13 +126,13 @@ Les résultats varient peu selon les méthodes (figure~\ref{mediane}). Les médi
 \begin{figure}
 \centering
 \begin{minipage}{0.6\linewidth}
-\includegraphics[width=\textwidth]{Fig/reference.jpg}
+% \includegraphics[width=\textwidth]{Fig/reference.jpg}
 \end{minipage}
 \begin{minipage}{0.6\linewidth}
-\includegraphics[width=\textwidth]{Fig/merge_min.jpg}
+% \includegraphics[width=\textwidth]{Fig/merge_min.jpg}
 \end{minipage}
 \begin{minipage}{0.6\linewidth}
-\includegraphics[width=\textwidth]{Fig/merge_median.jpg}
+% \includegraphics[width=\textwidth]{Fig/merge_median.jpg}
 \end{minipage}
 \caption{Correction des artéfacts. De haut en bas : image de référence, puis corrigée avec les méthodes du minimum et de la médiane.}
 \label{mediane}

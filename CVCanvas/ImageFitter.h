@@ -33,5 +33,5 @@ typedef enum FitStrategy
  *  @param strategy       The fit strategy
  *  @param fittedImages   Upon completion, will contain the fitted images, in the same order as the input.
  */
-void fit(std::vector<cv::Mat>& inputImages, cv::Mat referenceImage, FitStrategy strategy, std::vector<cv::Mat>& fittedImages);
+void fit(std::vector<cv::Mat>& inputImages, cv::Mat referenceImage, FitStrategy strategy, std::vector<cv::Mat>& fittedImages, int flags = cv::INTER_LINEAR);
 #endif /* defined(__CVCanvas__ImageFitter__) */

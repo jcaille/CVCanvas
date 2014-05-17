@@ -10,28 +10,33 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <fstream>
+
+#include "ImageLoader.h"
+
 #include "UserAffineFitter.h"
 #include "SIFTAffintFitter.h"
 #include "compare_intensity.h"
 #include "MedianMerger.h"
 #include "TrueMedianMerger.h"
 
+// This project demonstrate the artifact removing technique described in
+// http://www.dtic.upf.edu/~gharo/Download/paintings_siims_no_compression.pdf
+// The method is devided in two parts : Matchings and Merging.
+// During the matching part, we try to find a common perspective to all the images
+// During the Merging part, we merge the images to remove artifact.
+
+// The implementartion has been divided in multiple classes and files to be easy to use
+// Everything can be configured with those arguments :
+
+ImageLoaderSet set = BRUSH_ODD;
 
 int main(int argc, const char * argv[])
 {
     std::vector<cv::Mat> images;
     std::vector<cv::Mat> fittedImages;
 
-//    images.push_back(cv::imread("Meduse_fake/1_reflet.png"));
-//    images.push_back(cv::imread("Meduse_fake/2_reflet.png"));
-//    images.push_back(cv::imread("Meduse_fake/3_reflet.png"));
-//    images.push_back(cv::imread("Meduse_fake/4_reflet.png"));
-//    images.push_back(cv::imread("Meduse_fake/5_reflet.png"));
-//    images.push_back(cv::imread("Brush/0.jpg"));
-    images.push_back(cv::imread("Brush/1.jpg"));
-    images.push_back(cv::imread("Brush/2.jpg"));
-    images.push_back(cv::imread("Brush/3.jpg"));
-
+    loadImage(set, images);
+    
     std::cout << "Fitting" << std::endl;
 
     
@@ -62,6 +67,8 @@ int main(int argc, const char * argv[])
 	cv::imshow("True Merge", tmm.output);
     cv::imwrite("/tmp/trueMerge.png", tmm.output);
 
+    std::cout << "Done" << std::endl;
+    
     cv::waitKey();
     
     return 0;

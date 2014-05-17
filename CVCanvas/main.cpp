@@ -33,6 +33,8 @@ int main(int argc, const char * argv[])
     std::vector<cv::Mat> images;
     std::vector<cv::Mat> fittedImages;
 
+    std::cout << CV_VERSION << std::endl;
+    
     loadImage(set, images);
     
     std::cout << "Fitting" << std::endl;

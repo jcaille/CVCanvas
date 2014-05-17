@@ -23,6 +23,16 @@ uchar imedian(std::vector<float> fl1, std::vector<float> fl2)
 	return uchar(bestIndex);
 }
 
+void displayFloatMat(Mat x, char* windowTitle)
+{
+	double mn, mx;
+	minMaxLoc(x, &mn, &mx);
+	if(mx==mn)
+		return;
+	Mat y;
+	x.convertTo(y, CV_8U, 255/(mx-mn), -255*mn/(mx-mn));
+	imshow(windowTitle, y);
+}
 vector<Mat> grad(Mat x)
 {
 	vector<Mat> G;
@@ -48,6 +58,50 @@ vector<Mat> grad(Mat x)
 	G.push_back(x1);
 	G.push_back(x2);
 	return G;
+}
+
+Mat myLaplacian(Mat x)
+{
+	Mat l(x.size(), CV_32F);
+	for(int i=0; i<x.cols; i++)
+		for(int j=0; j<x.rows; j++)
+			if(i*j*(x.cols-1-i)*(x.rows-1-j)==0)
+				l.at<float>(j,i) = 0.f;
+			else
+				l.at<float>(j,i)=
+				x.at<float>(j,i-1)+x.at<float>(j,i+1)+
+				x.at<float>(j-1,i)+x.at<float>(j+1,i)-
+				4*x.at<float>(j,i);
+	return l;
+}
+
+Mat iterativePoissonSolver(Mat lap, Mat origin, int nbOfIter = 10)
+{
+	Mat result, prev;
+	origin.copyTo(result);
+	for(int iter = 0; iter < nbOfIter; iter++)
+	{
+		//displayFloatMat(result, "prev");
+		//cout << iter << " " << endl;
+		result.copyTo(prev);
+		for(int i=1; i<origin.cols-1; i++)
+			for(int j=1; j<origin.rows-1; j++)
+				result.at<float>(j,i) = 1/4.f*
+				(prev.at<float>(j-1,i)+prev.at<float>(j+1,i)+prev.at<float>(j,i-1)+prev.at<float>(j,i+1)-lap.at<float>(j,i));
+		for(int i=1; i<origin.cols-1; i++)
+		{
+			result.at<float>(0,i) = result.at<float>(1,i);
+			result.at<float>(origin.rows-1,i) = result.at<float>(origin.rows-2,i);
+		}
+		for(int j=0; j<origin.rows; j++)
+		{
+			result.at<float>(j,0) = result.at<float>(j,1);
+			result.at<float>(j,origin.cols-1) = result.at<float>(j,origin.cols-2);
+		}
+		//displayFloatMat(result, "now");
+		//waitKey();
+	}
+	return result;
 }
 GradientMedianMerger::GradientMedianMerger(std::vector<cv::Mat> images) : images(images)
 {
@@ -78,15 +132,10 @@ GradientMedianMerger::GradientMedianMerger(std::vector<cv::Mat> images) : images
 				}
 			}
 		}
-		//double mn,mx;
-		//minMaxLoc(x1,&mn,&mx); 
-		//Mat L1;
-		//x1.convertTo(L1, CV_8U, 255/(mx-mn), -mn);
-		//imshow("horizontal gradient example", L1);
-		//waitKey();
 		imagesGrad1.push_back(x1);
 		imagesGrad2.push_back(x2);
 	}
+
 	cout << "compute indexes for gradient image" << endl;
 	Mat indexes(images[0].size(), CV_8U);
     for (int i = 0; i < indexes.cols; i++)
@@ -102,30 +151,20 @@ GradientMedianMerger::GradientMedianMerger(std::vector<cv::Mat> images) : images
             indexes.at<char>(j,i) = imedian(fl1, fl2);
         }
     }
-	double mn,mx;
-	minMaxLoc(indexes,&mn,&mx); 
-	Mat L1;
-	indexes.convertTo(L1, CV_8U, 255/(mx-mn), -mn);
-	imwrite("C:/4a/Telecom/SI343/Results/indexes.jpg",L1);
-	imshow("indexes", L1);
-	waitKey();
+	//displayFloatMat(indexes, "indexes");
+
 	cout << "compute all gradients" << endl;
+	//vector of original images by canal
 	vector<vector<Mat>> spl;
-	for(int im=0; im<images.size(); im++)
+	for(unsigned im=0; im<images.size(); im++)
 	{
 		vector<Mat> s;
 		cv::split(images[im], s);
 		spl.push_back(s);
 	}
-	//double mn,mx;
-	//minMaxLoc(spl[0][0],&mn,&mx);
-	//cout << mn;
-	//Mat L1;
-	//spl[0][0].convertTo(L1, CV_8U, 255/(mx-mn), -mn);
-	//imshow("example of canal original image", L1);
-	//waitKey();
+
 	vector<vector<vector<Mat>>> allGradients;
-	for(int im=0; im<images.size(); im++)
+	for(unsigned im=0; im<images.size(); im++)
 	{
 		vector<vector<Mat>> agim;
 		for(int c=0; c<3; c++)
@@ -158,12 +197,7 @@ GradientMedianMerger::GradientMedianMerger(std::vector<cv::Mat> images) : images
 		}
 		allGradients.push_back(agim);
 	}
-	//minMaxLoc(allGradients[0][0][0],&mn,&mx);
-	//cout << mn;
-	//Mat L2;
-	//allGradients[0][0][0].convertTo(L2, CV_8U, 255/(mx-mn), -mn);
-	//imshow("example of canal original gradient", L2);
-	//waitKey();
+
 	cout << "compute resultant divergence of gradient image" << endl;
 	vector<Mat> divGradRes;
 	divGradRes.push_back(Mat(images[0].size(), CV_32F));
@@ -180,74 +214,33 @@ GradientMedianMerger::GradientMedianMerger(std::vector<cv::Mat> images) : images
 					allGradients[int(indexes.at<uchar>(j,i-1))][c][0].at<float>(j,i-1)+
 					allGradients[int(indexes.at<uchar>(j,i))][c][1].at<float>(j,i)+
 					allGradients[int(indexes.at<uchar>(j-1,i))][c][1].at<float>(j-1,i);
-	//double mn,mx;
-	//minMaxLoc(divGradRes[0],&mn,&mx);
-	//Mat L1;
-	//divGradRes[0].convertTo(L1, CV_8U, 255/(mx-mn), -mn);
-	//imshow("example of resultant laplacian image", L1);
+	displayFloatMat(divGradRes[0], "example of resultat Laplacian image");
+
+
+	Mat orig;
+	spl[0][0].convertTo(orig, CV_32F);
+	//Laplacian(orig, j, CV_32F, 1, 1., 0., BORDER_REFLECT);
+	Mat j=myLaplacian(orig);
+	displayFloatMat(j, "example of original Laplaican");
 	//waitKey();
-	//cout << "solving Poisson equation" << endl;
-	vector<Mat> PoissonSolve;
-	float epsilon = 0.001f;
+
+	Mat distance;
+	absdiff(spl[0][0], spl[1][0], distance);
+	displayFloatMat(distance, "distance between input images");
+	//waitKey();
+	cout << "solving Poisson equation" << endl;
+	vector<Mat> poissonSolve;
 	for(int c=0; c<3; c++)
 	{
-		Mat ft;
-		dft(divGradRes[c], ft, cv::DFT_SCALE|cv::DFT_COMPLEX_OUTPUT);
-		//for(int i=0; i<ft.cols; i++)
-		//{
-		//	cout << i << endl;
-		//	cout << ft.rows << " " << ft.cols << " " << ft.channels() << endl;
-		//	for(int j=0; j<ft.rows; j++)
-		//	{
-		//		if(i==0 && j==0 && abs(4-2*cos(2*3.1415f*i/float(ft.rows))-2*cos(2*3.1415f*j/float(ft.cols)))>epsilon)
-		//		{
- 	//				float f1 =ft.at<cv::Scalar_<float>>(j,i)[0]/(4-2*cos(2*3.1415f*i/float(ft.rows))-2*cos(2*3.1415f*j/float(ft.cols)));
-		//			float f2 = ft.at<cv::Scalar_<float>>(j,i)[1]/(4-2*cos(2*3.1415f*i/float(ft.rows))-2*cos(2*3.1415f*j/float(ft.cols)));
-		//			ft.at<cv::Scalar_<float>>(j,i)=Scalar(f1,f2);
-		//		}
-		//		else
-		//			ft.at<cv::Scalar_<float>>(j,i)=Scalar(0.f,0.f);
-		//	}
-		//}
-		Mat mu = Mat::zeros(ft.size(), CV_32FC2);
-		for(int i=0; i<360; i++)
-		{
-			cout << i << endl;
-			cout << ft.rows << " " << ft.cols << " " << ft.channels() << endl;
-			for(int j=0; j<ft.rows; j++)
-			{
-				if(i!=0 && j!=0 && abs(4-2*cos(2*3.1415f*i/float(ft.rows))-2*cos(2*3.1415f*j/float(ft.cols)))>epsilon)
-				{
- 					float f1 =1/(4-2*cos(2*3.1415f*i/float(ft.rows))-2*cos(2*3.1415f*j/float(ft.cols)));
-					float f2 = 1/(4-2*cos(2*3.1415f*i/float(ft.rows))-2*cos(2*3.1415f*j/float(ft.cols)));
-					mu.at<cv::Scalar_<float>>(j,i)=Scalar(f1,f2);
-				}
-			}
-		}
-		ft = mu.mul(ft);
-		cv::Mat fi;
-		cv::dft(ft, fi, cv::DFT_INVERSE|cv::DFT_REAL_OUTPUT);
-
-		//double mn,mx;
-		//minMaxLoc(divGradRes[0],&mn,&mx);
-		//Mat L1;
-		//divGradRes[0].convertTo(L1, CV_8U, 255/(mx-mn), -mn);
-		//imshow("example of resultant laplacian image", L1);
-	    //waitKey();
-	    cout << "solving Poisson equation" << endl;
-		cv::Mat fo;
-		double mn,mx;
-		minMaxLoc(fi,&mn,&mx);
-		cout << mn << " " << mx;
-		fi.convertTo(fo, CV_8U, 255/(mx-mn), -mn);
-		imshow("example of resultant laplacian image", fo);
-	    waitKey();
-		PoissonSolve.push_back(fo);
-		cout << endl;
+		Mat original;
+		spl[0][c].convertTo(original, CV_32F);
+		Mat floatImage = iterativePoissonSolver(divGradRes[c], original, 30);
+		//double mn, mx;
+		//minMaxLoc(floatImage, &mn, &mx);
+		Mat ucharImage;
+		floatImage.convertTo(ucharImage, CV_8U);//, 255/(mx-mn), -255*mn/(mx-mn));
+		poissonSolve.push_back(ucharImage);
 	}
 	output = Mat(images[0].size(), CV_8UC3);
-	merge(PoissonSolve, output);
-	cout << output.at<cv::Scalar_<uchar>>(1,1)[0];
-	cout << endl;
-	merge(PoissonSolve,output);
+	merge(poissonSolve, output);
 }

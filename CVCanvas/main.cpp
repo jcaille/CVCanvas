@@ -15,6 +15,7 @@
 #include "compare_intensity.h"
 #include "MedianMerger.h"
 #include "TrueMedianMerger.h"
+#include "GradientMedianMerger.h"
 
 
 int main(int argc, const char * argv[])
@@ -48,19 +49,18 @@ int main(int argc, const char * argv[])
 		ss << i;
 		cv::imshow(ss.str(),fittedImages[i]);
 	}
-//	cv::waitKey();
+	cv::waitKey();
 
     std::cout << "Merging" << std::endl;
     
     
-    cv::Mat merged = merge(fittedImages);
-    
-    cv::imshow("Merge", merged);
-    cv::imwrite("/tmp/medianMerge.png", merged);
-    
-	TrueMedianMerger tmm(fittedImages);
+ //   cv::Mat merged = merge(fittedImages);
+ //   
+ //   cv::imshow("Merge", merged);
+ //   cv::imwrite("/tmp/medianMerge.png", merged);
+ //   
+	GradientMedianMerger tmm(fittedImages);
 	cv::imshow("True Merge", tmm.output);
-    cv::imwrite("/tmp/trueMerge.png", tmm.output);
 
     cv::waitKey();
     

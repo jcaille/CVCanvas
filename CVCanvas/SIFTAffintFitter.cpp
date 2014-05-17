@@ -82,10 +82,10 @@ void SIFTAffineFitter::fit()
     output = Mat(reference.size(), input.type());
     warpPerspective(input, output, homography, reference.size());
 
-    Mat m;
-    drawMatches(input, keypointsInput, reference, keypointsReference, matches, m, Scalar::all(-1), Scalar::all(-1), (Mat) inliers);
-    imshow("Matches", m);
-    imwrite("/tmp/working.png", input);
-    imwrite("/tmp/fitted.png", output);
+//    Mat m;
+//    drawMatches(input, keypointsInput, reference, keypointsReference, matches, m, Scalar::all(-1), Scalar::all(-1), (Mat) inliers);
+//    imshow("Matches", m);
+//    imwrite("/tmp/working.png", input);
+//    imwrite("/tmp/fitted.png", output);
 //    waitKey();
 }

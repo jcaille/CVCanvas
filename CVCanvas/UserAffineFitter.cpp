@@ -8,11 +8,11 @@
 
 #include "UserAffineFitter.h"
 
-UserAffineFitter::UserAffineFitter(cv::Size wantedOutputSize, cv::Mat inputMatrix)
+UserAffineFitter::UserAffineFitter(cv::Mat referenceImage)
 {
-    input = inputMatrix;
-    outputSize = wantedOutputSize;
-    isDefiningCorners = false;
+    input = referenceImage;
+    referenceCorners = userDefinedInitialCorners(referenceImage);
+
 }
 
 void UserAffineFitter::mouseCallback( int event, int x, int y, int flags, void* param )
@@ -31,7 +31,7 @@ void UserAffineFitter::mouseCallback( int event, int x, int y, int flags, void* 
     }
 }
 
-std::vector<cv::Point2f> UserAffineFitter::userDefinedInitialCorners()
+std::vector<cv::Point2f> UserAffineFitter::userDefinedInitialCorners(cv::Mat image)
 {
     std::vector<cv::Point2f> res;
     cv::imshow("Input Image Corners", input);
@@ -53,18 +53,12 @@ std::vector<cv::Point2f> UserAffineFitter::userDefinedInitialCorners()
     return res;
 }
 
-void UserAffineFitter::fit()
+cv::Mat UserAffineFitter::fit(cv::Mat inputImage)
 {
-    std::vector<cv::Point2f> corners = userDefinedInitialCorners();
+    std::vector<cv::Point2f> corners = userDefinedInitialCorners(inputImage);
+    cv::Mat perspective = cv::getPerspectiveTransform(corners, referenceCorners);
     
-    std::vector<cv::Point2f> outCorners;
-    outCorners.push_back(cv::Point2f(0,0));
-    outCorners.push_back(cv::Point2f(outputSize.width, 0));
-    outCorners.push_back(cv::Point2f(outputSize.width, outputSize.height));
-    outCorners.push_back(cv::Point2f(0, outputSize.height));
-    
-    cv::Mat perspective = cv::getPerspectiveTransform(corners, outCorners);
-    
-    output = cv::Mat(outputSize, input.type());
-    cv::warpPerspective(input, output, perspective, outputSize);
+    cv::Mat output = cv::Mat(input.size(), input.type());
+    cv::warpPerspective(input, output, perspective, input.size());
+    return output;
 }

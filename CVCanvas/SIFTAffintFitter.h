@@ -10,6 +10,7 @@
 #define __CVCanvas__SIFTAffintFitter__
 
 #include <iostream>
+
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -18,24 +19,27 @@
 #include <opencv2/calib3d/calib3d.hpp>
 
 class SIFTAffineFitter{
-    cv::Mat input; cv::Mat reference;
+    cv::Mat reference;
     
 public:
-    /**
-     *  The fitted image
-     */
-    cv::Mat output;
-    
 
     /**
-     *  Creates the fitter
-     *  @param inputImage       The image to fit
-     *  @param referenceImage   The reference image. The fitted image will have the same size, and will hopefully be aligned to this reference image.
+     *  Creates the fitter with the given reference image.
      */
-    SIFTAffineFitter(cv::Mat inputImage, cv::Mat referenceImage);
+    SIFTAffineFitter(cv::Mat referenceImage);
     
-    void fit();
+    /**
+     *  Fits the input image with respect to the reference image of the fitter
+     *
+     *  @param inputImage The image to be fitted
+     *
+     *  @return A fitted image.
+     */
+    cv::Mat fit(cv::Mat inputImage);
     
+private :
+    std::vector<cv::KeyPoint> keypointsReference;
+    cv::Mat descriptorsReference;
 };
 
 

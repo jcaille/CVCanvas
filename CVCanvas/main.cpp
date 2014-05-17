@@ -12,9 +12,8 @@
 #include <fstream>
 
 #include "ImageLoader.h"
+#include "ImageFitter.h"
 
-#include "UserAffineFitter.h"
-#include "SIFTAffintFitter.h"
 #include "compare_intensity.h"
 #include "MedianMerger.h"
 #include "TrueMedianMerger.h"
@@ -28,8 +27,8 @@
 // The implementartion has been divided in multiple classes and files to be easy to use
 // Everything can be configured with those arguments :
 
-ImageLoaderSet set = BRUSH_ODD;
-
+ImageLoaderSet set = MAN_SUBSET;
+FitStrategy strategy = SIFT;
 int main(int argc, const char * argv[])
 {
     std::vector<cv::Mat> images;
@@ -39,21 +38,14 @@ int main(int argc, const char * argv[])
     
     std::cout << "Fitting" << std::endl;
 
+    fit(images, images[0], strategy, fittedImages);
     
-    for (unsigned i = 0; i < images.size(); ++i)
-    {
-        SIFTAffineFitter fitter = SIFTAffineFitter(images[i], images[0]);
-        fitter.fit();
-        fittedImages.push_back(fitter.output);
-    }
-	
 	for (unsigned i=0; i<images.size(); i++)
 	{
 		std::stringstream ss;
 		ss << i;
 		cv::imshow(ss.str(),fittedImages[i]);
 	}
-//	cv::waitKey();
 
     std::cout << "Merging" << std::endl;
     

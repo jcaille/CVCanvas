@@ -16,36 +16,38 @@
 
 class UserAffineFitter {
     cv::Mat input;
-    cv::Size outputSize;
-    bool isDefiningCorners;
+    std::vector<cv::Point2f> referenceCorners;
     
     /**
      *  Called at every mouse event when user is defining the corners
      */
     static void mouseCallback( int event, int x, int y, int flags, void* param );
     
+
     /**
-     *  Ask the user for the corners of the painting
+     *  Ak the user for the corners of the painting
      *
-     *  @return A std::vector containing the four corners in clockwise order, starting at the top-left corner.
+     *  @param image The image in which the painting is present
+     *
+     *  @return A std::vector containing the four corners defined by the user.
      */
-    std::vector<cv::Point2f> userDefinedInitialCorners();
+    std::vector<cv::Point2f> userDefinedInitialCorners(cv::Mat image);
 
 public:
-    /**
-     *  The fitted image
-     */
-    cv::Mat output;
 
     /**
-     *  Constructor for the object.
-     *
-     *  @param outputSize   The size of the output image
-     *  @param inputMatrix  An image containing the painting we want.
+     *  Constructor for the object. It will ask the user for the corners of the painting in the reference image.
      */
-    UserAffineFitter(cv::Size outputSize, cv::Mat inputMatrix);
+    UserAffineFitter(cv::Mat referenceImage);
     
-    void fit();
+    /**
+     *  Fits the painting in the image by asking the user to click on the 4 corners.
+     *
+     *  @param inputImage The image to fit
+     *
+     *  @return The fitted image
+     */
+    cv::Mat fit(cv::Mat inputImage);
 
 };
 

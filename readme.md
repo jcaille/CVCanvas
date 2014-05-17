@@ -4,7 +4,7 @@
 This is the repository for the CVCanvas Project @ Telecom ParisTech
 The objective is to be able to remove lightning artifacts (such as reflection, specularity and lambertian reflets) on paintings, using multiple pictures of the same painting, from different angles. We used the method described in this [article](http://www.dtic.upf.edu/~gharo/Download/paintings_siims_no_compression.pdf)
 
-## Build Intstruction
+## Build Instructions
 The repo does not contain any project or build settings (Difficult to share across plateforms). We however have included almost everything neeed to run the project :
 
 * `CVCanvas`folder contains the source code.

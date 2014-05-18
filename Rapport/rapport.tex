@@ -190,7 +190,14 @@ Lorsque l'on connait le gradient $F$ d'une image, il est possible de la retrouve
 %------------------------------------------> SECTION Implémentation
 \section{Implémentation}
 
-Pour l'implémentation de la méthode décrite ci-dessus, nous avons choisi des outils C++ accompagné de la librarie OpenCV~\citep{opencv_library} de traitement d'image. La collaboration a été réalisé grâce au gestionnaire de version git. La totalité du code et ses révisions antérieures sont donc disponible sur Github : http://github.com/jcaille/CVCanvas
+\subsection{Choix technique}
+Nous avons implémenté la méthode décrite dans l'article à l'aide du language C++ accompagné de la librarie OpenCV~\citep{opencv_library} de traitement d'image. Cette librarie, très utilisée dans l'industrie, permet d'accélerer le traitement d'image et met à disposition de l'utilisateur plusieurs fonctions (comme par exemple l'algorithme de RANSAC, implémenté dans la fonction \texttt{findHomography}).
+
+\subsection{Architecture}
+La méthode décrite ci-dessus est fortement dépendante des paramètres d'entrées et des images à traiter. Par exemple, sur certaines images, la méthode de fusion par minimum est plus adaptée que la méthode de fusion par médianne. Il est donc nécessaire de permettre à l'utilisateur de sélectionner les différentes techniques de recalage et de fusion d'image. Ainsi, nous avons séparé les différente responsabilités entre plusieurs fichiers et classes. Plusieurs méthodes(situées dans les fichiers \texttt{ImageFitter} \texttt{ImageMerger}) permettent de sélectionner les différentes techniques possibles. 
+
+\subsection{Collaboration}
+La collaboration a été réalisé grâce au gestionnaire de version git. La totalité du code et ses révisions antérieures sont donc disponible sur Github : http://github.com/jcaille/CVCanvas
 
 %------------------------------------------> SECTION Résultats
 \section{Résultats}

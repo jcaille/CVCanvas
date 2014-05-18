@@ -1,7 +1,7 @@
 // Theophile Dalens 2014
 
 #include "GradientMedianMerger.h"
-
+#include <fstream>
 using namespace std;
 using namespace cv;
 
@@ -74,7 +74,19 @@ Mat myLaplacian(Mat x)
 				4*x.at<float>(j,i);
 	return l;
 }
-
+void saveFloatMat(const Mat& x, char* path)
+{
+	ofstream saveFile;
+	saveFile.open(path);
+	for(int j=0; j<x.rows; j++)
+	{
+		for(int i=0; i<x.cols; i++)
+		{
+			saveFile << x.at<float>(j,i) << '\t';
+		}
+		saveFile << endl;
+	}
+}
 Mat iterativePoissonSolver(Mat lap, Mat origin, int nbOfIter = 10)
 {
 	Mat result, prev;
@@ -215,15 +227,10 @@ GradientMedianMerger::GradientMedianMerger(std::vector<cv::Mat> images) : images
 					allGradients[int(indexes.at<uchar>(j,i))][c][1].at<float>(j,i)+
 					allGradients[int(indexes.at<uchar>(j-1,i))][c][1].at<float>(j-1,i);
 	displayFloatMat(divGradRes[0], "example of resultat Laplacian image");
-	//FileStorage fs("C:/4a/Telecom/SI343/a0.xml", FileStorage::WRITE);
-	//fs << "a0" << divGradRes[0];
-	//fs.release();
-	//FileStorage fs1("C:/4a/Telecom/SI343/a1.xml", FileStorage::WRITE);
-	//fs1 << "a1" << divGradRes[1];
-	//fs1.release();
-	//FileStorage fs2("C:/4a/Telecom/SI343/a2.xml", FileStorage::WRITE);
-	//fs2 << "a2" << divGradRes[2];
-	//fs2.release();
+	saveFloatMat(divGradRes[0],"C:/4a/Telecom/SI343/a0.mat");
+	saveFloatMat(divGradRes[1],"C:/4a/Telecom/SI343/a1.mat");
+	saveFloatMat(divGradRes[2],"C:/4a/Telecom/SI343/a2.mat");
+
 
 	Mat orig;
 	spl[0][0].convertTo(orig, CV_32F);

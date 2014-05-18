@@ -24,7 +24,7 @@ int main(int argc, const char * argv[])
     std::vector<cv::Mat> fittedImages;
 
 //    images.push_back(cv::imread("Meduse_fake/1_reflet.png"));
-//    images.push_back(cv::imread("Meduse_fake/2_reflet.png"));
+//    images.push_back(cv::imr	ead("Meduse_fake/2_reflet.png"));
 //    images.push_back(cv::imread("Meduse_fake/3_reflet.png"));
 //    images.push_back(cv::imread("Meduse_fake/4_reflet.png"));
 //    images.push_back(cv::imread("Meduse_fake/5_reflet.png"));

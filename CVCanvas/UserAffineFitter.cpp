@@ -23,7 +23,7 @@ void UserAffineFitter::mouseCallback( int event, int x, int y, int flags, void* 
         case CV_EVENT_LBUTTONDOWN:
             //User did finish clicking on a point
             std::cout << "Ok, I got your point" << std::endl;
-            cornerVector->push_back(cv::Point2f(x,y));
+            cornerVector->push_back(cv::Point2f(float(x),float(y)));
             break;
             
         default:
@@ -59,9 +59,9 @@ void UserAffineFitter::fit()
     
     std::vector<cv::Point2f> outCorners;
     outCorners.push_back(cv::Point2f(0,0));
-    outCorners.push_back(cv::Point2f(outputSize.width, 0));
-    outCorners.push_back(cv::Point2f(outputSize.width, outputSize.height));
-    outCorners.push_back(cv::Point2f(0, outputSize.height));
+    outCorners.push_back(cv::Point2f(float(outputSize.width), 0));
+    outCorners.push_back(cv::Point2f(float(outputSize.width), float(outputSize.height)));
+    outCorners.push_back(cv::Point2f(0, float(outputSize.height)));
     
     cv::Mat perspective = cv::getPerspectiveTransform(corners, outCorners);
     

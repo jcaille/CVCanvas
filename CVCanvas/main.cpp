@@ -24,21 +24,18 @@
 // The implementartion has been divided in multiple classes and files to be easy to use
 // Everything can be configured with those arguments :
 
-ImageLoaderSet set = MAN_ALL;
+ImageLoaderSet set = BRUSH_ALL;
 
 FitStrategy fitStrategy = SIFT;
 
-MergeStrategy mergeStrategy = AVERAGE;
+MergeStrategy mergeStrategy = GRADIENT_MEDIAN;
 
 int main(int argc, const char * argv[])
 {
     std::vector<cv::Mat> images;
     std::vector<cv::Mat> fittedImages;
-
-    std::cout << CV_VERSION << std::endl;
     
     loadImage(set, images);
-    
     std::cout << "Fitting" << std::endl;
 
     fit(images, images[0], fitStrategy, fittedImages);
@@ -49,9 +46,6 @@ int main(int argc, const char * argv[])
 		ss << "Fitted image " << i;
 		cv::imshow(ss.str(),fittedImages[i]);
 	}
-    
-    cv::imwrite("/tmp/reference.png", images[0]);
-    cv::imwrite("/tmp/fitted_error.png", fittedImages[3]);
     
     std::cout << "Merging" << std::endl;
     

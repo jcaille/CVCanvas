@@ -160,15 +160,31 @@ Deux solutions possibles peuvent venir à l'esprit. D'une part, nous pourrions r
 
 %---------------------------------------------------> SUB SECTION Fusion des images
 \subsection{Fusion des images}
-Une fois les images recalées, l'étape suivante est de fusionner les images entre elles pour éliminer les reflets. Nous avons testés différentes approches proposées par~\citep{haro2012photographing}, développées ci-après.
+Une fois les images recalées, l'étape suivante est de fusionner les images entre elles pour éliminer les reflets. Plusieurs approches sont possibles ; dans les premières approches développées ci-après, nous testons des approches qui fusionnent les images pixels par pixels, c'est-à-dire que chaque pixel de l'image reconstitué dépend uniquement des pixels correspondant dans les différentes images recalées. Ainsi, si les images recalées sont notées \( \tilde I_1, ..., \tilde I_n \), l'image fusionnée \(J\) est définie par
+\[
+J(x,y)=f\left(\tilde I_1(x,y), ..., \tilde I_n(x,y)\right)
+\]
+De nombreux choix sont possibles pour la fonction $f$. Dans la section~\ref{fusionmin}, nous proposons une fusion par minimum sur chaque canal de couleur. Nous proposons ensuite des fusions par médiane ; elle se fait par canal RGB dans la section~\ref{fusionmediane}, par médiane vectorielle dans la section~\ref{fusiontruemediane}, ou par une méthode légèrement différente dans un autre espace de couleur, détaillée dans la section~\ref{fusionlab}.\\
+Il est également possible de travailler dans l'espace gradient au lieu de l'espace de l'image. Dans ce cas, l'image fusionnée J est définie par
+\[
+\nabla J(x,y)=f\left(\nabla \tilde I_1(x,y), ..., \nabla \tilde I_n(x,y)\right)
+\]
+Ce cas est détaillé dans la section~\ref{fusiongrad}.
 %------------------------------------------------------------> SUB SUB SECTION Fusion par minimum
 \subsubsection{Fusion par minimum}
+\label{fusionmin}
 Pour cette méthode, nous faisons l'hypothèse que le les reflets ne font qu'ajouter de la luminosité aux différents pixels de l'image, et que les reflets ne peuvent se retrouver dans toutes les images. Dès lors, il suffit de prendre le minimum de chaque canal de couleur pour parvenir à éliminer les reflets.
 %------------------------------------------------------------> SUB SUB SECTION Fusion par médianne vectorielle
+\subsubsection{Fusion par médiane car canal}
+\label{fusionmediane}
 \subsubsection{Fusion par médiane vectorielle}
+\label{fusiontruemediane}
 Une autre façon consiste à voter, pixel par pixel, pour ce qui devrait être le pixel sans reflet. On suppose ici que le reflet se trouve dans moins de la moitié des images à un endroit donné. Deux méthodes sont alors possibles. On peut prendre la médiane des pixels, canaux de couleurs par canaux de couleurs. Cette méthode, simple et intuitive, à le désavantage, comme la méthode précédente, de mélanger les canaux couleurs d'images différentes, ce qui peut conduire à des couleurs non naturelles. Pour pallier à ce problème, nous avons également implémenté un équivalent de la médiane dans l'espace vectoriel des couleurs ; il s'agit du vecteur minimisant la somme de ses distances $L_1$ aux autres vecteurs. En pratique, nous n'observons pas de différences entre ces deux médianes. 
+\subsubsection{Fusion par médiane dans l'espace Lab}
+\label{fusionlab}
 %------------------------------------------------------------> SUB SUB SECTION Fusion dans l'espace gradient
 \subsubsection{Fusion dans l'espace gradient}
+\label{fusiongrad}
 Enfin, une méthode décrite dans~\citep{haro2012photographing} permettant de réduire plus les reflets consiste à prendre la médiane vectorielle dans l'espace gradient des images. Pour ce faire, nous calculons les images gradients des images recalées, converties en niveau de gris, et nous en calculons la médiane vectorielle en chaque point. Ensuite, nous construisons les gradients de chaque canal de couleur de l'image fusionnée en prenant, pour chaque point et chaque canal, le gradient de l'image dont la médiane est issue. Ce sont donc bien les gradients des canaux de couleurs qui sont considérés.\\
 Lorsque l'on connait le gradient $F$ d'une image, il est possible de la retrouver en minimisant $\min||\mathrm{grad}I - F||$. Ceci se fait grâce à l'équation de Poisson $\Delta I = \mathrm{div}F$. Cette équation est alors résolue, canal par canal, en passant par la transformée de Fourier, s'inspirant de~\citep{morel2010pde}. Rencontrant des difficultés dans cette dernière étape, nous n'avons pas pu terminer cette méthode. Elle donne cependant d'excellents résultats dans~\citep{haro2012photographing}, éliminant certains reflets apparaissant dans une majorité d'images.
 %------------------------------------------> SECTION Implémentation

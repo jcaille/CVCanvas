@@ -7,6 +7,7 @@
 //
 
 #include "ImageMerger.h"
+#include "GradientMedianMerger.h"
 
 /**
  *  This function computes the component-wise median of the given colors
@@ -118,8 +119,8 @@ cv::Scalar_<uchar> minimum(std::vector<cv::Scalar_<uchar>> colors)
 cv::Mat merge(std::vector<cv::Mat> images, MergeStrategy strategy)
 {
     if (strategy == GRADIENT_MEDIAN) {
-        std::cout<<"Not implemented yet" << std::endl;
-        return images[0];
+        GradientMedianMerger tmm(images);
+        return tmm.output;
     } else {
         // Those strategies act pixel-per-pixel
         cv::Mat res(images[0].size(), images[0].type());

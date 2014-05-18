@@ -25,7 +25,7 @@ void UserAffineFitter::mouseCallback( int event, int x, int y, int flags, void* 
         case CV_EVENT_LBUTTONDOWN:
             //User did finish clicking on a point
             std::cout << "Ok, I got your point" << std::endl;
-            cornerVector->push_back(cv::Point2f(x,y));
+            cornerVector->push_back(cv::Point2f(float(x),float(y)));
             break;
             
         default:

@@ -37,8 +37,6 @@ cv::Mat SIFTAffineFitter::fit(cv::Mat inputImage, int& inliersNumber)
         pointsInput.push_back(keypointsInput[match.queryIdx].pt);
         pointsReference.push_back(keypointsReference[match.trainIdx].pt);
     }
-    std::cout << "    Good matches : " << pointsInput.size() << std::endl;
-
     std::vector<uchar> inliers;
     Mat homography;
     if (flags & CV_WARP_INVERSE_MAP) {
@@ -55,9 +53,9 @@ cv::Mat SIFTAffineFitter::fit(cv::Mat inputImage, int& inliersNumber)
 	{
 		inliersNumber += (int) inliers[i];
 	}
-    
-    std::cout << "   Inliers : " << inliersNumber << std::endl;
-    
+    std::cout << "    Inliers : " << inliersNumber << std::endl;
+
+
 #if 0
     
     Mat m;

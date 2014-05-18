@@ -70,28 +70,46 @@ En pratique, cette méthode de recalage manuelle n'est pas utilisable pour plusi
   \includegraphics[width=0.45\textwidth]{Fig/User_fitted.png}\\ \vspace{0.1cm}
   \includegraphics[width=0.45\textwidth]{Fig/User_average.png}
 
-
   \caption{En haut : Image de référence et image après recalage avec la méthode manuelle. En bas : Superposition des deux images. On observe des zones (particulièrement en bas à gauche) ou le recalage n'est pas bon.}
 \end{figure}
 
 %------------------------------------------------------------> SUB SUB SECTION Recalage automatique avec utilisation des  SIFT
 \subsubsection{Recalage automatique avec utilisation des  SIFT}
 
-Pour obtenir une précision sous-pixellique, nous extrayons des points d'intérêt de type SIFT~\citep{lowe1999object} de manière automatique sur es deux images. En supposant que la plupart des points d'intérêt sont communs sur les deux images, nous pouvons rechercher des correspondance point-à-point en se servant des descripteurs (Figure 1). 
+Pour obtenir une précision sous-pixellique, nous utilisons des descripteurs locaux pour trouver des correspondances entre les deux image.
 
-Nous pouvons alors chercher la meilleur homographie permettant de faire correspondre les descripteurs de la première image à ceux de la seconde image. Comme l'algorithme SIFT peut fournir des points qui ne sont pas parfaits (correspondance entre deux zones très éloignées dans la réalité par exemple), nous avons utilisé la méthode RANSAC~\citep{fischler1981random} pour filtrer les bonnes correspondance et obtenir le recalage (Figure 2 et 3). Ce recalage s'est avéré suffisant pour la suite de l'algorithme.
+\paragraph{SIFT}
+Les SIFT~\citep{lowe1999object}(Scale Invariant Feature Transform) sont des descripteurs locaux globalement inviariants aux changements de perspectives. Ils sont généralement utilisés pour détecter les correspondances entre des objets présent dans deux images différentes et sont donc très adaptés au problème actuel. Ils sont de plus invariants aux changements d'échelles et de luminosité, rendant plus robuste l'algorithme de recadrage.
+
+FIGURE
+
+\paragraph{Recherche de correspondances}
+Nous extrayons de chaque image plusieurs centaines de SIFTs, auxquels sont associés leurs descripteurs. Nous recherchons ensuite des correspondances entre les images. Plusieurs algorithmes existent, mais le plus simple consiste à prendre pour chaque point de la première image le point le plus proche (dans l'espace des descripteurs) comme correspondant. Pour éviter d'obtenir un trop grand nombre de faux-positifs, un seuillage est effectué, nous permettant d'obtenir des correspondances point-à-point entre les deux images
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.75\textwidth]{Fig/sift_raw.png}
-  \caption{Paires de descripteurs SIFT entre les deux images avant filtrage par RANSAC}
+  \caption{Paires de descripteurs SIFT entre les deux images. Il existe encore un grand nombre de fausses-corresondances}
 \end{figure}
+
+
+\paragraph{RANSAC}
+Il reste donc à trouver la matrice $M$ permettant de passer de l'image à recadre à l'image de référence. Contrairement au recalage manuel, il n'existe pas de tel matrice pour plus de quatre paires de points. Toutefois, si toutes les correspondances sont correctes (et il n'existe pas de faux-positifs), il est possible de trouver une matrice minimisant l'erreur $e$, par exemple par descente de gradient.
+
+$$ e = \sum_{i = 1}^{n}\|p_i - Mq_i\|^2$$
+
+Cependant, la présence de faux-positifs (\emph{i.e.} des paires de points qui ne correspondent pas d'une image à l'autre), il est nécessaire d'employer un algorithme plus robuste pour trouver cette homographie. La méthode RANSAC~\citep{fischler1981random} permet à la fois de filtrer les bonnes correspondances et d'obtenirs cette homographie. Cet algorithme itératif sélectionne un sous-ensemble de descripteurs aléatoirement et marque ces correspondances comme "bonnes". On cherche ensuite l'homographie la plus adaptée à cet ensemble de point (en minimisant l'erreur $e$ par exemple), puis on cherche les correspondances qui sont "d'accord" avec cette homographie (celle pour lesquelles l'erreur résiduelle est inféiruer à un certain seuil). Si suffisement de paires sont en accord avec l'homographie trouvée, elle est conservée, sinon, l'algorithme est relancé avec une nouvelle initialisation aléatoire.
+
+Cet algorithme est extrêment robuste et peut supporter un grand nombre de faux-positifs (jusqu'à 50\% dans certains cas). Toutefois, la convergence n'est pas forcément assurée. Il y'a également un certains nombres de paramètres dont les valeurs sont à ajuster en fonction du problèmes.
+
+En pratique toutefois, et sur la pluspart des photos, l'algorithme de RANSAC permet de trouver une bonne correspondance entre les différentes images. 
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.75\textwidth]{Fig/sift_ransac.png}
   \caption{Paires de descripteurs SIFT estimés correctes par l'algorithme RANSAC et utilisés pour renconstruire la perspective}
 \end{figure}
+
 
 \begin{figure}[H]
   \centering
@@ -100,6 +118,44 @@ Nous pouvons alors chercher la meilleur homographie permettant de faire correspo
   \includegraphics[width=0.30\textwidth]{Fig/fitted.png}
 
   \caption{A gauche : image de travail, au centre : image de référence, à droite : image de travail après recalage par rapport à l'image de référence. Noter la différence de position des reflets entre l'image de référence et l'image recalée}
+\end{figure}
+
+%------------------------------------------------------------> SUB SUB SECTION Amélioration
+\subsubsection{Amélioration}
+
+Plusieurs améliorations des méthodes proposées auparavant sont possibles, tant sur le modèle que sur la robustesse du système et du traitement des données
+
+\paragraph{Prise en compte des déformations dues à la lentilles}
+La méthode proposée ci dessus est suffisante pour la pluspart des améliorations, mais n'est pas parfaites, en effet, les déformations dues à la lentille de la caméra induise des imperfections dans les images. Une simple perspective ne peux pas corriger ces déformations, et le recalage n'est pas idéal.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.45\textwidth]{Fig/Recalage_OK.png}
+  \includegraphics[width=0.45\textwidth]{Fig/Recalage_flou.png}
+  \caption{Détails de la moyenne de l'image recalées et de l'image de référence. A gauche, le recalage est correcte et les contours sont nets. A droite, sur le bord de l'image, le recalage est moins bon, et les contours sont flous.}
+\end{figure}
+
+Pour palier à ce problème, l'article suggère un modèle prenant en compte les déformations dues à la lentille, et se basant sur un polynôme de degré 4 $P(x,y)$. Pour trouver ce polynôme, la matrice de perspective $M$ est obtenue par l'algorithme de RANSAC, puis les points en "accord" avec cette matrice au sens de RANSAC sont utilisés pour trouver les meilleurs coefficients du polynôme. La correction à appliquer à l'image est donc 
+
+$$ q'_i = M q_i + P(q_i) $$
+
+\paragraph{Amélioration de la robustesse de la méthode SIFT}
+Sur plusieurs jeux d'images, la méthode SIFT n'a pas été adaptée, et proposait des recalages abberants, inuitilisable pour la fusion d'image.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.25\textwidth]{Fig/error_reference.png}
+  \includegraphics[width=0.25\textwidth]{Fig/error_fitted.png}
+  \caption{Image de référence, et image inccorectement recalés}
+\end{figure}
+
+Deux solutions possibles peuvent venir à l'esprit. D'une part, nous pourrions rejeter automatiquement les images où le nombre de correspondances "bonnes" selon RANSAC est trop faible, et où le recalage n'est pas acceptable. D'autre part, nous pourrions demander à l'utilisateur d'indiquer grossièrement les coins du tableau. Ceci permet d'obtenir une approximation de la "bonne" perspective, et de restreindre la recherche par RANSAC à un espace plus petit.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.45\textwidth]{Fig/merge_no_rejection.png}
+  \includegraphics[width=0.45\textwidth]{Fig/merge_rejection.png}
+  \caption{Moyennes des images recalées sans rejet (toutes les images recalées sont gardées) et avec rejet (les images où le nombre d'inlier est trop faible est écarté)}
 \end{figure}
 
 %---------------------------------------------------> SUB SECTION Fusion des images

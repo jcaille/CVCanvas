@@ -32,11 +32,12 @@ public:
     /**
      *  Fits the input image with respect to the reference image of the fitter
      *
-     *  @param inputImage The image to be fitted
+     *  @param inputImage   The image to be fitted
+     *  @param inliers      Upon completion, contains the number of inliers for this image.
      *
      *  @return A fitted image.
      */
-    cv::Mat fit(cv::Mat inputImage);
+    cv::Mat fit(cv::Mat inputImage, int& inliers);
     
 private :
     std::vector<cv::KeyPoint> keypointsReference;

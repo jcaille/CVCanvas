@@ -29,7 +29,15 @@ void fit(std::vector<cv::Mat>& inputImages, cv::Mat referenceImage, FitStrategy 
         SIFTAffineFitter siftFitter(referenceImage, flags);
         for(int i = 0 ; i < inputImages.size() ; i++)
         {
-            fittedImages.push_back(siftFitter.fit(inputImages[i]));
+            int inliers;
+            cv::Mat fitted = siftFitter.fit(inputImages[i], inliers);
+            if(inliers > 100)
+            {
+                // Only add the image if there is enough inliers
+                fittedImages.push_back(fitted);
+            } else {
+                std::cout << "    Rejecting image" << std::endl;
+            }
         }
     }
     else

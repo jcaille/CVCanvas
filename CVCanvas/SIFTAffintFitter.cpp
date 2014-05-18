@@ -18,7 +18,7 @@ SIFTAffineFitter::SIFTAffineFitter(cv::Mat referenceImage, int flags)
     s(reference, Mat(), keypointsReference, descriptorsReference);
 }
 
-cv::Mat SIFTAffineFitter::fit(cv::Mat inputImage)
+cv::Mat SIFTAffineFitter::fit(cv::Mat inputImage, int& inliersNumber)
 {
     std::vector<cv::KeyPoint> keypointsInput;
     Mat descriptorsInput;
@@ -50,7 +50,7 @@ cv::Mat SIFTAffineFitter::fit(cv::Mat inputImage)
     Mat output(reference.size(), inputImage.type());
     warpPerspective(inputImage, output, homography, reference.size(), flags);
     
-    int inliersNumber = 0;
+    inliersNumber = 0;
 	for (unsigned i = 0; i<inliers.size(); i++)
 	{
 		inliersNumber += (int) inliers[i];

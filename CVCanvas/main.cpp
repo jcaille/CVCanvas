@@ -28,7 +28,10 @@ ImageLoaderSet set = ImageLoaderSet::BRUSH_ALL;
 
 FitStrategy fitStrategy = SIFT;
 
-MergeStrategy mergeStrategy = MergeStrategy::GRADIENT_MEDIAN;
+MergeStrategy mergeStrategy = MergeStrategy::MINIMUM;
+
+//This threshold determines if an image has been fitted correctly.
+int inlierThreshold = 40;
 
 int main(int argc, const char * argv[])
 {
@@ -38,7 +41,7 @@ int main(int argc, const char * argv[])
     loadImage(set, images);
     std::cout << "Fitting" << std::endl;
 
-    fit(images, images[0], fitStrategy, fittedImages);
+	fit(images, images[0], fitStrategy, fittedImages, 1, inlierThreshold);
     
 	for (unsigned i=0; i<fittedImages.size(); i++)
 	{

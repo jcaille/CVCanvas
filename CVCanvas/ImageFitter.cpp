@@ -12,7 +12,7 @@
 
 
 
-void fit(std::vector<cv::Mat>& inputImages, cv::Mat referenceImage, FitStrategy strategy, std::vector<cv::Mat>& fittedImages, int flags)
+void fit(std::vector<cv::Mat>& inputImages, cv::Mat referenceImage, FitStrategy strategy, std::vector<cv::Mat>& fittedImages, int flags, int inliersThreshold)
 {
     fittedImages.clear();
 
@@ -31,7 +31,7 @@ void fit(std::vector<cv::Mat>& inputImages, cv::Mat referenceImage, FitStrategy 
         {
             int inliers;
             cv::Mat fitted = siftFitter.fit(inputImages[i], inliers);
-            if(inliers > 40)
+            if(inliers > inliersThreshold)
             {
                 // Only add the image if there is enough inliers
                 fittedImages.push_back(fitted);

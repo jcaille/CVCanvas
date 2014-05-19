@@ -5,6 +5,7 @@
 using namespace std;
 using namespace cv;
 
+// returns the index of the median
 uchar imedian(std::vector<float> fl1, std::vector<float> fl2)
 {
 	unsigned bestIndex = -1;
@@ -23,6 +24,7 @@ uchar imedian(std::vector<float> fl1, std::vector<float> fl2)
 	return uchar(bestIndex);
 }
 
+//displays a float matrix
 void displayFloatMat(Mat x, char* windowTitle)
 {
 	double mn, mx;
@@ -226,23 +228,15 @@ GradientMedianMerger::GradientMedianMerger(std::vector<cv::Mat> images) : images
 					allGradients[int(indexes.at<uchar>(j,i-1))][c][0].at<float>(j,i-1)+
 					allGradients[int(indexes.at<uchar>(j,i))][c][1].at<float>(j,i)+
 					allGradients[int(indexes.at<uchar>(j-1,i))][c][1].at<float>(j-1,i);
-	displayFloatMat(divGradRes[0], "example of resultat Laplacian image");
-	saveFloatMat(divGradRes[0],"C:/4a/Telecom/SI343/a0.mat");
-	saveFloatMat(divGradRes[1],"C:/4a/Telecom/SI343/a1.mat");
-	saveFloatMat(divGradRes[2],"C:/4a/Telecom/SI343/a2.mat");
+	//displayFloatMat(divGradRes[0], "example of resultat Laplacian image");
 
-
-	Mat orig;
-	spl[0][0].convertTo(orig, CV_32F);
+	//Mat orig;
+	//spl[0][0].convertTo(orig, CV_32F);
 	//Laplacian(orig, j, CV_32F, 1, 1., 0., BORDER_REFLECT);
-	Mat j=myLaplacian(orig);
-	displayFloatMat(j, "example of original Laplaican");
+	//Mat j=myLaplacian(orig);
+	//displayFloatMat(j, "example of original Laplaican");
 	//waitKey();
 
-	Mat distance;
-	absdiff(spl[0][0], spl[1][0], distance);
-	displayFloatMat(distance, "distance between input images");
-	//waitKey();
 	cout << "solving Poisson equation" << endl;
 	vector<Mat> poissonSolve;
 	for(int c=0; c<3; c++)

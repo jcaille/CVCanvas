@@ -16,52 +16,49 @@
 
 \title{Reconstruction d'un tableau sans reflets à partir de photos prises sous des angles différents}
 \date{16 Mai 2014}
-\author{Théophile DALENS et Jean CAILLÉ}
+\author{Théophile DALENS \and Jean CAILLÉ \and Henri MAITRE (encadrant)}
 
 \begin{document}
 \maketitle
 
 %------------------------------------------> SECTION Introduction
 \section{Introduction}
-Il devient aujourd'hui facile d'obtenir des photos de chefs-d'oeuvre dans un musée. Toutefois la présence de lumières couplés aux vernis et aux cadre en verres entraine sur la plupart des photos prises des reflets peu plaisants à l'oeil. En multipliant les points de vue, nous allons voir qu'il est possible de supprimer ces reflets et d'obtenir une photo proche de celle prise dans des conditions idéales.
+Il devient aujourd'hui facile d'obtenir des photos de chefs-d'œuvre dans un musée. Toutefois la présence de lumières, couplée aux vernis et aux cadres en verre, entraine sur la plupart des photos prises des reflets peu plaisants à l'œil. En multipliant les points de vue, nous allons voir qu'il est possible de supprimer ces reflets et d'obtenir une photo proche de celle prise dans des conditions idéales.
 
 %------------------------------------------> SECTION Méthode
 \section{Méthode}
 
-La méthode proposée par l'article ne s'attache pas à traiter le tableau sous l'angle de la reconnaissance d'image (reconnaitre par exemple les aplats de couleurs et supprimer les reflets à partir de cette information), mais uniquement grâce à des techniques génériques, permettant leur application sur la pluspart des tableaux. L'idée consiste à prendre plusieurs photos du même tableau sous différents angles. Les reflets ne dégraderons pas alors la même zone du tableau sur les différentes images et nous pourrons reconstruire à partir de ces images une image "virtuelle" sans reflets.\\
+La méthode proposée par l'article~\citep{haro2012photographing} ne s'attache pas à traiter le tableau sous l'angle de la reconnaissance d'image (reconnaitre par exemple les aplats de couleurs et supprimer les reflets à partir de cette information), mais uniquement grâce à des techniques génériques, permettant leur application sur la plupart des tableaux. L'idée consiste à prendre plusieurs photos du même tableau sous différents angles. Les reflets ne dégraderont pas la même zone du tableau sur les différentes images et nous pourrons reconstruire à partir de ces images une image "virtuelle" sans reflets.\\
 
-L'algorithme suggéré par l'article se décompose en deux parties. Tout d'abord, les images sont "recaléss" afin d'obtenir une perspective commune. Ainsi, les pixels des différentes images correspondent aux mêmes zones sur le tableaux, et il devient plus facile de reconstruire l'image corrigée. La seconde partie correspond justement à cette reconstructions. Plusieurs méthodes sont suggérées et nous nous sommes attachés à implémenter et comparer les différentes méthodes de fusion d'image proposées.
-
-FIGURE - 3 ETAPES
+L'algorithme suggéré par l'article se décompose en deux parties. Tout d'abord, les images sont "recalées" afin d'obtenir une perspective commune. Ainsi, les pixels des différentes images correspondent aux mêmes zones sur les tableaux, et il devient plus facile de reconstruire l'image corrigée. La seconde partie correspond justement à cette reconstruction. Plusieurs méthodes sont suggérées et nous nous sommes attachés à implémenter et comparer les différentes méthodes de fusion d'image proposées.
 
 %---------------------------------------------------> SUB SECTION Recalage des images
 \subsection{Recalage des images}
 
-Comme décrit plus haut, la première partie revient à "recaler" les images entre elles, c'est à dire simuler une perspective commune entre les photos. Sois nous pouvons nous attacher à modifier toutes les photos pour recaler l'image du tableau sur un rectangle donné, mais cela nécessite une connaissance \emph{a priori} des dimensions du tableau, que nous ne connaissons pas. Pour palier à ce problème, nous choisissons parmis les images de la peinture une photo dite de \emph{référence} et nous recadrerons les autres pour les afficher sous cette perspective.\\
+Comme décrit plus haut, la première partie revient à "recaler" les images entre elles, c'est à dire simuler une perspective commune entre les photos. Il n'est pas possible de modifier toutes les photos pour recaler l'image du tableau sur un rectangle donné car cela nécessiterait une connaissance \emph{a priori} des dimensions du tableau, que nous ne connaissons pas. Pour palier à ce problème, nous choisissons parmi les images de la peinture une photo dite de \emph{référence} et nous recalons les autres pour les afficher sous cette perspective.\\
 
-Dans le cas où la caméra est idéale (modèle sténopé, pas de déformation dues à la lentille), et le tableau est parfaitement plan, la transormation permettant de recaler un tableau est une perspective. Nous n'avons pas eu besoin lors de nos traitement d'hypothèses supplémentaires.
+Dans le cas où la caméra est idéale (modèle sténopé, pas de déformation dues à la lentille), et le tableau est parfaitement plan, la transformation permettant de recaler les images est une perspective (homographie). Nous n'avons pas eu besoin lors de nos traitements d'hypothèses supplémentaires.
 
 %------------------------------------------------------------> SUB SUB SECTION Recalage manuel
 \subsubsection{Recalage manuel}
-Pour trouver la perspective liant deux images données, la solution la plus simple est de demander à l'utilisateur de cliquer sur 4 points communs entre les deux photos (par exemple les quatre coins du tableau). On obtient alors 2 quadrilatères quelconques, définis par les points ${p_i}_{i = 1...4}$ dans l'image de référence et ${p_i}_{i = 1...4}$ dans l'image que  l'on souhaite recaler.
-On peut à partir ce ces points trouver une perspective permettant de passer du premier quadrilatère à l'autre, en effet, il existe en effet une et unique matrice $M$ en coordonées homogènes tel que
+Pour trouver la perspective liant deux images données, la solution la plus simple est de demander à l'utilisateur de cliquer sur 4 points communs entre les deux photos (par exemple les quatre coins du tableau). On obtient alors 2 quadrilatères quelconques, définis par les points $(p_i)_{i = 1...4}$ dans l'image de référence et $(q_i)_{i = 1...4}$ dans l'image que l'on souhaite recaler. \\
+On peut à partir ce ces points trouver une perspective permettant de passer du premier quadrilatère à l'autre, en effet, il existe en effet une et unique matrice $M$ en coordonnées homogènes tel que
 
 $$ \forall i \in \{1...4\}, q_i = M p_i $$
 
-Une fois que nous avons trouvé la matrice $M$, il est possible de redresser l'image pour que les deux quadrilatères coincides, en appliquant la perspective définie par M. \\
-Toutefois, il est peu probable que les valeurs de l'image de référence à échantilloner aient des coordonées entières (\emph{e.g.} des pixels). Nous devons donc pouvoir interpoler l'image de référence pour construire l'image redréssée. Plusieurs méthodes sont alors possible :
+Une fois que nous avons trouvé la matrice $M$, il est possible de redresser l'image pour que les deux quadrilatères coïncident, en appliquant la perspective définie par M. \\
+Toutefois, il est peu probable que les valeurs de l'image de référence à échantillonner aient des coordonnées entières (\emph{e.g.} des pixels). Nous devons donc pouvoir interpoler l'image de référence pour construire l'image redressée. Plusieurs méthodes sont alors possible :
 \paragraph{Interpolation au plus proche}
-Pour trouver la valeur du pixel $(x,y)$ dans l'image de référence, on arrondi simplement les deux nombres pour tomber su un pixel. Cette méthode est simple à utiliser, mais moins précise que l'interpolation linéaire.
+Pour trouver la valeur du pixel $(x,y)$ dans l'image de référence, on arrondit simplement les deux nombres pour tomber sur un pixel. Cette méthode est simple à utiliser, mais moins précise que l'interpolation linéaire.
 
 \paragraph{Interpolation Bilinéaire}
 Dans cette méthode, pour trouver la valeur du pixel $(x,y)$, on observe les 4 valeur des pixels les plus proches et on interpole bilinéairement.
 
-En pratique, nous avons choisi d'interpoller l'image de façon bilinéaire, plus précise et donc plus adaptée au travail de fusion qui viendra par la suite
+En pratique, nous avons choisi d'interpoler l'image de façon bilinéaire, plus précise et donc plus adaptée au travail de fusion qui viendra par la suite.
 
 \paragraph{Problème avec la méthode manuelle}
 
-En pratique, cette méthode de recalage manuelle n'est pas utilisable pour plusieurs raisons. D'une part, le temps nécessaire pour définir les coins de chaques peinture est relativement long. D'autre part, la précision obtenue lors de nos test n'est pas suffisante pour l'étape suivante du traitement. En effet, l'utilisateur ne peux cliquer qu'avec une précision de quelques pixels au plus. Pour palier à ces problèmes, l'article suggère une solution plus automatisée, faisant appel à des descripteurs locaux.
-
+En pratique, cette méthode de recalage manuelle n'est pas utilisable pour plusieurs raisons. D'une part, le temps nécessaire pour définir les coins de chaque peinture est relativement long. D'autre part, la précision obtenue lors de nos essais n'est pas suffisante pour l'étape suivante du traitement. En effet, l'utilisateur ne peux cliquer qu'avec une précision de quelques pixels au plus. Pour palier à ces problèmes, l'article suggère une solution plus automatisée, faisant appel à des descripteurs locaux.
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.45\textwidth]{Fig/User_reference.png}
@@ -70,42 +67,39 @@ En pratique, cette méthode de recalage manuelle n'est pas utilisable pour plusi
 
   \caption{En haut : Image de référence et image après recalage avec la méthode manuelle. En bas : Superposition des deux images. On observe des zones (particulièrement en bas à gauche) ou le recalage n'est pas bon.}
 \end{figure}
-
 %------------------------------------------------------------> SUB SUB SECTION Recalage automatique avec utilisation des  SIFT
-\subsubsection{Recalage automatique avec utilisation des  SIFT}
+\subsubsection{Recalage automatique avec utilisation des SIFT}
 
 Pour obtenir une précision sous-pixellique, nous utilisons des descripteurs locaux pour trouver des correspondances entre les deux image.
 
 \paragraph{SIFT}
-Les SIFT~\citep{lowe1999object}(Scale Invariant Feature Transform) sont des descripteurs locaux globalement inviariants aux changements de perspectives. Ils sont généralement utilisés pour détecter les correspondances entre des objets présent dans deux images différentes et sont donc très adaptés au problème actuel. Ils sont de plus invariants aux changements d'échelles et de luminosité, rendant plus robuste l'algorithme de recadrage.
-
-FIGURE
+Les SIFT (Scale Invariant Feature Transform, \citep{lowe1999object}) sont des descripteurs locaux globalement invariants aux transformations linéaires. Ils sont robustes aux transformations homographiques si la perspective n'est pas trop importante. Ils sont généralement utilisés pour détecter les correspondances entre des objets présent dans deux images différentes et sont donc très adaptés au problème actuel. Ils sont de plus invariants aux changements de luminosité et de contraste, les rendant plus robustes au problème de recalage.
 
 \paragraph{Recherche de correspondances}
-Nous extrayons de chaque image plusieurs centaines de SIFTs, auxquels sont associés leurs descripteurs. Nous recherchons ensuite des correspondances entre les images. Plusieurs algorithmes existent, mais le plus simple consiste à prendre pour chaque point de la première image le point le plus proche (dans l'espace des descripteurs) comme correspondant. Pour éviter d'obtenir un trop grand nombre de faux-positifs, un seuillage est effectué, nous permettant d'obtenir des correspondances point-à-point entre les deux images
+Nous extrayons de chaque image plusieurs centaines de SIFTs, auxquels sont associés leurs descripteurs. Nous recherchons ensuite des correspondances entre les images. Plusieurs algorithmes existent, mais le plus simple consiste à prendre pour chaque point de la première image le point le plus proche (dans l'espace des descripteurs) comme correspondant. Pour éviter d'obtenir un trop grand nombre de faux positifs, un seuillage est effectué, nous permettant d'obtenir des correspondances point-à-point entre les deux images:
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.75\textwidth]{Fig/sift_raw.png}
-  \caption{Paires de descripteurs SIFT entre les deux images. Il existe encore un grand nombre de fausses-corresondances}
+  \caption{Paires de descripteurs SIFT entre les deux images. Il existe encore un grand nombre de fausses correspondances}
 \end{figure}
 
 
 \paragraph{RANSAC}
-Il reste donc à trouver la matrice $M$ permettant de passer de l'image à recadre à l'image de référence. Contrairement au recalage manuel, il n'existe pas de tel matrice pour plus de quatre paires de points. Toutefois, si toutes les correspondances sont correctes (et il n'existe pas de faux-positifs), il est possible de trouver une matrice minimisant l'erreur $e$, par exemple par descente de gradient.
+Il reste donc à trouver la matrice $M$ permettant de passer de l'image à recaler à l'image de référence. Le problème est différent du recalage manuel car il n'existe pas de telle matrice pour plus de quatre paires de points en général. Toutefois, si toutes les correspondances sont correctes (et il n'existe pas de faux positifs), il est possible de trouver une matrice minimisant l'erreur $e$, par exemple par descente de gradient.
 
 $$ e = \sum_{i = 1}^{n}\|p_i - Mq_i\|^2$$
 
-Cependant, la présence de faux-positifs (c'est-à-dire des paires de points qui ne correspondent pas d'une image à l'autre), il est nécessaire d'employer un algorithme plus robuste pour trouver cette homographie. La méthode RANSAC~\citep{fischler1981random} permet à la fois de filtrer les bonnes correspondances et d'obtenirs cette homographie. Cet algorithme itératif sélectionne un sous-ensemble de descripteurs aléatoirement et marque ces correspondances comme "bonnes". On cherche ensuite l'homographie la plus adaptée à cet ensemble de point (en minimisant l'erreur $e$ par exemple), puis on cherche les correspondances qui sont "d'accord" avec cette homographie (celle pour lesquelles l'erreur résiduelle est inféiruer à un certain seuil). Si suffisement de paires sont en accord avec l'homographie trouvée, elle est conservée, sinon, l'algorithme est relancé avec une nouvelle initialisation aléatoire.
+Cependant, en présence de faux positifs (c'est-à-dire des paires de points qui ne correspondent pas d'une image à l'autre), il est nécessaire d'employer un algorithme plus robuste pour trouver cette homographie. La méthode RANSAC~\citep{fischler1981random} permet à la fois de filtrer les bonnes correspondances et d'obtenir cette homographie. Cet algorithme itératif sélectionne un sous-ensemble de descripteurs aléatoirement et marque ces correspondances comme "bonnes". On cherche ensuite l'homographie la plus adaptée à cet ensemble de point (en minimisant l'erreur $e$ par exemple), puis on cherche les correspondances qui sont "d'accord" avec cette homographie (celles pour lesquelles l'erreur résiduelle est inférieure à un certain seuil). Si suffisamment de paires sont en accord avec l'homographie trouvée, elle est conservée, sinon, l'algorithme est relancé avec une nouvelle initialisation aléatoire.
 
-Cet algorithme est extrêment robuste et peut supporter un grand nombre de faux-positifs (jusqu'à 50\% dans certains cas). Toutefois, la convergence n'est pas forcément assurée. Il y'a également un certains nombres de paramètres dont les valeurs sont à ajuster en fonction du problèmes.
+Cet algorithme est extrêmement robuste et peut supporter un grand nombre de faux-positifs (plus de 50\%). Toutefois, la convergence n'est pas forcément assurée. Il n'y a également un certains nombres de paramètres dont les valeurs sont à ajuster en fonction du problèmes.
 
-En pratique toutefois, et sur la pluspart des photos, l'algorithme de RANSAC permet de trouver une bonne correspondance entre les différentes images. 
+En pratique toutefois, et sur la majorité des photographies, l'algorithme de RANSAC permet de trouver une bonne correspondance entre les différentes images. 
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.75\textwidth]{Fig/sift_ransac.png}
-  \caption{Paires de descripteurs SIFT estimés correctes par l'algorithme RANSAC et utilisés pour renconstruire la perspective}
+  \caption{Correspondances de descripteurs SIFT estimées correctes par l'algorithme RANSAC et utilisées pour reconstruire la perspective}
 \end{figure}
 
 
@@ -119,12 +113,11 @@ En pratique toutefois, et sur la pluspart des photos, l'algorithme de RANSAC per
 \end{figure}
 
 %------------------------------------------------------------> SUB SUB SECTION Amélioration
-\subsubsection{Amélioration}
+\subsubsection{Améliorations possibles}
 
-Plusieurs améliorations des méthodes proposées auparavant sont possibles, tant sur le modèle que sur la robustesse du système et du traitement des données
-
+Plusieurs améliorations des méthodes proposées auparavant sont possibles, tant sur le modèle que sur la robustesse du système et du traitement des données.
 \paragraph{Prise en compte des déformations dues à la lentilles}
-La méthode proposée ci dessus est suffisante pour la pluspart des améliorations, mais n'est pas parfaites, en effet, les déformations dues à la lentille de la caméra induise des imperfections dans les images. Une simple perspective ne peux pas corriger ces déformations, et le recalage n'est pas idéal.
+La méthode proposée ci-dessus n'est pas parfaite. En effet, les déformations dues à la lentille de la caméra induise des imperfections dans les images. Une simple perspective ne peux pas corriger ces déformations, et le recalage n'est pas idéal.
 
 \begin{figure}[H]
   \centering
@@ -138,7 +131,7 @@ Pour palier à ce problème, l'article suggère un modèle prenant en compte les
 $$ q'_i = M q_i + P(q_i) $$
 
 \paragraph{Amélioration de la robustesse de la méthode SIFT}
-Sur plusieurs jeux d'images, la méthode SIFT n'a pas été adaptée, et proposait des recalages abberants, inuitilisable pour la fusion d'image.
+Sur plusieurs jeux d'images, la méthode SIFT n'a pas été adaptée, et proposait des recalages aberrants, inutilisable pour la fusion d'image.
 
 \begin{figure}[H]
   \centering
@@ -170,8 +163,8 @@ De nombreux choix sont possibles pour la fonction $f$. Une première tentative a
 \caption{Courbes d'intensités comparées. Sur l'image de gauche, chaque point $(x,y)$ blanc correspond à l'existence d'un couple dont l'intensité est $x$ sur une image et $y$ sur l'autre. A droite, le nombre de points correspondant est sommé et passé en échelle logarithmique. En bleu, la droite d'équation $y=x$. Les points s'éloignant fortement de cet axe sont probablement des points présentant des reflets.}
 \label{itensitecompare}
 \end{figure}
-Ces courbes d'intensité montrent la complexité du problème ; même recalées, les images présentent des variations locales importantes d'intensité (la droite a une forte épaisseur). Ainsi, il est difficile de catégoriser les points présentant des reflets. La fonction $f$ doit donc prendre en compte tous les points. La moyenne arithmétique \\
-Dans la section~\ref{fusionmin}, nous proposons une fusion par minimum sur chaque canal de couleur. Nous proposons ensuite des fusions par médiane ; elle se fait par canal RGB dans la section~\ref{fusionmediane}, par médiane vectorielle dans la section~\ref{fusiontruemediane}, ou par une méthode légèrement différente dans un autre espace de couleur, détaillée dans la section~\ref{fusionlab}.\\
+Ces courbes d'intensité montrent la complexité du problème ; même recalées, les images présentent des variations locales importantes d'intensité (la droite a une forte épaisseur). Ainsi, il est difficile de catégoriser les points présentant des reflets. La fonction $f$ doit donc prendre en compte tous les points. La moyenne arithmétique ne permet pas d'obtenir une fusion efficace ; elle atténue les reflets mais les multiplie (en nombre) sur l'image fusionnée.\\
+Dans la section~\ref{fusionmin}, nous proposons une fusion par minimum sur chaque canal de couleur. Nous proposons ensuite des fusions par médiane ; elle se fait par canal RGB dans la section~\ref{fusionmediane}, par médiane vectorielle dans la section~\ref{fusiontruemediane}, ou en passant dans l'espace de couleur CIELAB dans la section~\ref{fusionlab}.\\
 Il est également possible de travailler dans l'espace gradient au lieu de l'espace de l'image. Dans ce cas, l'image fusionnée J est définie par
 \[
 \nabla J(x,y)=f\left(\nabla \tilde I_1(x,y), ..., \nabla \tilde I_n(x,y)\right)
@@ -204,21 +197,29 @@ Ainsi, pour la fonction $f$ que nous choisissons est ici la fonction vecteur med
 \[
 J(x,y)=\mathrm{vecmedian}\left(\tilde I_1(x,y), ..., \tilde I_n(x,y)\right)
 \]
-En toute rigueur, le vecteur médian n'est pas toujours défini. Il est possible en effet que plusieurs vecteurs $\mathbf{x}$ atteignent le minimum de la définition. En pratique, nous prenons soin de toujours sélectionner des vecteurs provenant de la même image en cas de conflit entre deux images ; ainsi, il n'y a pas de discontinuité dans l'image résultante liée à ce problème. Dans le cadre de la médiane canal par canal, si le nombre d'images est pair, nous utilisons la moyenne des deux scalaires pouvant convenir.
-\subsubsection{Fusion par médiane dans l'espace Lab}
+En toute rigueur, le vecteur médian n'est pas toujours bien défini. Il est possible en effet que plusieurs vecteurs $\mathbf{x}$ atteignent le minimum de la définition. En pratique, nous prenons soin de toujours sélectionner des vecteurs provenant de la même image en cas de conflit entre deux images ; ainsi, il n'y a pas de discontinuité dans l'image résultante liée à ce problème. Dans le cadre de la médiane canal par canal, si le nombre d'images est pair, nous utilisons la moyenne des deux scalaires pouvant convenir.
+\subsubsection{Fusion par médiane dans l'espace CIELAB}
 \label{fusionlab}
+Il est possible de changer l'espace de couleur avant de procéder à la médiane. Ainsi, pour cette méthode, nous convertissons nos images dans l'espace de couleur CIELAB (CIE signifie "Comission Internationale de l'Éclairage"). Dans cet espace, le L correspond à la luminosité ; a et b indiquent la position de la couleur sur des axes vert/magenta et bleu/jaune. Cet espace est réputé plus uniforme perceptiblement que l'espace RGB. Ainsi, deux couleurs très proches à l'œuil seront très proches dans cet espace. Une fois la conversion faite, nous utilisons la médiane composante par composante.\\
+En pratique, les différentes médianes présentées changent peu les résultats.
 %------------------------------------------------------------> SUB SUB SECTION Fusion dans l'espace gradient
 \subsubsection{Fusion dans l'espace gradient}
-\centering
 \label{fusiongrad}
-Enfin, une méthode décrite dans~\citep{haro2012photographing} permettant de réduire plus les reflets consiste à prendre la médiane vectorielle dans l'espace gradient des images. Dans un premier temps, chaque image recalée $\tilde I$ est convertie en niveau de gris $tilde I^g$. Nous calculons ensuite le gradient de chacune de ces images. Nous en construisons une carte d'index, définie par
+Enfin, une méthode décrite dans~\citep{haro2012photographing} permettant de réduire plus les reflets consiste à prendre la médiane vectorielle dans l'espace gradient des images. Dans un premier temps, chaque image recalée $\tilde I$ est convertie en niveau de gris $\tilde I^g$. Nous calculons ensuite le gradient de chacune de ces images. Nous en construisons une carte d'index, définie par
 \[
-a(i,j) = arg\underset{k}{\mathrm{vecmedian}}\nabla\tilde I_k(i,j)
+a(i,j) = arg\underset{k}{\mathrm{vecmedian}}\nabla\tilde I^g_k(i,j)
 \]
-Cette carte nous sert à construire le gradient de l'image résultante en chaque canal :
+Nous prenons dont les indices des images correspondant au vecteur médian en chaque point. Cette carte (voir figure~\ref{indexes}) nous sert à construire le gradient de l'image résultante en chaque canal :
 \[
 F(x,y,c) = \tilde \nabla I_{a(i,j)}(x,y,c)
 \]
+\begin{figure}
+\centering
+\includegraphics[width=0.4\textwidth]{Fig/indexes.png}
+\includegraphics[width=0.4\textwidth]{Fig/laplacian.png}
+\caption{Laplacien de l'image à reconstruire. A gauche, les index à partir duquel sont calculés l'image gradient F. Chaque niveau de gris différent correspond à un index différent. A droite, le laplacien $\mathrm{div}F$ sur le canal de couleur B.}
+\label{indexes}
+\end{figure}
 Pour chaque canal de couleur $c$, nous reconstruisons l'image $J$ qui devrait être telle que
 \[
 \nabla J(x,y,c) = F(x,y,c)
@@ -229,7 +230,7 @@ Cependant, il est important de noter ici que $F$ n'est pas réellement le gradie
 \]
 L'équation de Poisson s'écrit
 \[
-\Delta J = \div F
+\Delta J = \mathrm{div} F
 \]
 c'est-à-dire, en chaque point,
 \[
@@ -239,52 +240,80 @@ Pour la résoudre, nous procédons par une méthode itérative. Nous initialison
 \[J_0 = \tilde I_1\]
 et nous répétons, jusqu'à convergence, l'équation
 \[
-J_{n+1}(i,j) = \frac{1}{4}J_n(i+1,j)+J_n(i-1,j)+J_n(i,j+1)+J_n(i,j-1)-F(i,j)
+J_{n+1}(i,j) = \frac{1}{4}\left(J_n(i+1,j)+J_n(i-1,j)+J_n(i,j+1)+J_n(i,j-1)-F(i,j)\right)
 \]
-En pratique, une douzaine d'itérations suffit pour éliminer les reflets. Cependant, le système ne converge pas car $\div F$ n'est pas réellement un Laplacien. De fait, nous observons des zones d'instabilité assez marquées, qui détruisent progressivement l'image. Ces zones naissent plus rapidement aux endroits où le recalage d'images est perfectible. De fait, 
-, et nous en calculons la médiane vectorielle en chaque point. Ensuite, nous construisons les gradients de chaque canal de couleur de l'image fusionnée en prenant, pour chaque point et chaque canal, le gradient de l'image dont la médiane est issue. Ce sont donc bien les gradients des canaux de couleurs qui sont considérés.\\
-Lorsque l'on connait le gradient $F$ d'une image, il est possible de la retrouver en minimisant $\min||\mathrm{grad}I - F||$. Ceci se fait grâce à l'équation de Poisson $\Delta I = \mathrm{div}F$. Cette équation est alors résolue, canal par canal, en passant par la transformée de Fourier, s'inspirant de~\citep{morel2010pde}. Rencontrant des difficultés dans cette dernière étape, nous n'avons pas pu terminer cette méthode. Elle donne cependant d'excellents résultats dans~\citep{haro2012photographing}, éliminant certains reflets apparaissant dans une majorité d'images (voir figure~\ref{poissonfig}).
+En pratique, une douzaine d'itérations suffit pour éliminer les reflets. Cependant, le système ne converge pas car $\mathrm{div} F$ n'est pas réellement un Laplacien. De fait, nous observons des zones d'instabilité assez marquées, qui détruisent progressivement l'image. Ces zones naissent plus rapidement aux endroits où le recalage d'images est perfectible. De fait, cette méthode ne donne pas des résultats comparables avec nos autres méthodes (voir figure~\ref{poissonfig}).
 \begin{figure}
-\includegraphics[width=0.6\textwidth]{Fig/poisson.png}
-\caption{Image fusionnée obtenue par la méthode des gradients médians. On aperçoit des zones saturées (blanches et noires) qui correspondent à des divergences dans la résolution de l'équation de Poisson. Ces zones correspondent aux zones où le recalage est imparfait.}
+\centering
+\includegraphics[width=0.45\textwidth]{Fig/diff.png}
+\includegraphics[width=0.45\textwidth]{Fig/poisson.png}
+\caption{A gauche, différence entre deux images recalées. On voit assez nettement de grandes différences sur le bord bas droite de la peinture. Cela peut être du à un recalage imparfait. A droite, image fusionnée obtenue par la méthode des gradients médians. On aperçoit des zones saturées (blanches et noires) qui correspondent à des divergences dans la résolution de l'équation de Poisson. Ces zones correspondent aux zones où le recalage est imparfait.}
 \label{poissonfig}
 \end{figure}
 %------------------------------------------> SECTION Implémentation
 \section{Implémentation}
 
-\subsection{Choix technique}
-Nous avons implémenté la méthode décrite dans l'article à l'aide du language C++ accompagné de la librarie OpenCV~\citep{opencv_library} de traitement d'image. Cette librarie, très utilisée dans l'industrie, permet d'accélerer le traitement d'image et met à disposition de l'utilisateur plusieurs fonctions (comme par exemple l'algorithme de RANSAC, implémenté dans la fonction \texttt{findHomography}).
+\subsection{Choix techniques}
+Nous avons implémenté la méthode décrite dans l'article à l'aide du langage C++ accompagné de la librairie OpenCV~\citep{opencv_library} de traitement d'image. Cette librairie, très utilisée dans l'industrie, permet d'accélérer le traitement d'image et met à disposition de l'utilisateur plusieurs fonctions (comme par exemple l'algorithme de RANSAC, implémenté dans la fonction \texttt{findHomography}).
 
 \subsection{Architecture}
-La méthode décrite ci-dessus est fortement dépendante des paramètres d'entrées et des images à traiter. Par exemple, sur certaines images, la méthode de fusion par minimum est plus adaptée que la méthode de fusion par médianne. Il est donc nécessaire de permettre à l'utilisateur de sélectionner les différentes techniques de recalage et de fusion d'image. Ainsi, nous avons séparé les différente responsabilités entre plusieurs fichiers et classes. Plusieurs méthodes(situées dans les fichiers \texttt{ImageFitter} \texttt{ImageMerger}) permettent de sélectionner les différentes techniques possibles. 
+Les méthodes décrites ci-dessus est fortement dépendante des paramètres d'entrées et des images à traiter. Par exemple, sur certaines images, la méthode de fusion par minimum est plus adaptée que la méthode de fusion par médiane. Il est donc nécessaire de permettre à l'utilisateur de sélectionner les différentes techniques de recalage et de fusion d'image. Ainsi, nous avons séparé les différente responsabilités entre plusieurs fichiers et classes. Plusieurs méthodes(situées dans les fichiers \texttt{ImageFitter} \texttt{ImageMerger}) permettent de sélectionner les différentes techniques possibles. 
 
 \subsection{Collaboration}
 La collaboration a été réalisé grâce au gestionnaire de version git. La totalité du code et ses révisions antérieures sont donc disponible sur Github : http://github.com/jcaille/CVCanvas
 
 %------------------------------------------> SECTION Résultats
 \section{Résultats}
-\label{results}
-Les résultats varient peu selon les méthodes (figure~\ref{mediane}). Les médianes permettent de retirer de nombreux artéfacts de reflets, mais ne fonctionnent pas là où une majorité d'images présentent des artéfacts. Les méthodes de médiane, canal par canal ou globale, donnent les mêmes résultats sur les exemples que nous avons essayés.
+Nous présentons nos résultats sur 3 jeux de photographies de peintures dont nous donnons le tableau de référence (celui qui sert à recaler les images) figure~\ref{input}. Toutes les images sont disponibles dans le dossier Images de notre répertoire de travail Github. 
 \begin{figure}
 \centering
-\begin{minipage}{0.6\linewidth}
-% \includegraphics[width=\textwidth]{Fig/reference.jpg}
-\end{minipage}
-\begin{minipage}{0.6\linewidth}
-% \includegraphics[width=\textwidth]{Fig/merge_min.jpg}
-\end{minipage}
-\begin{minipage}{0.6\linewidth}
-% \includegraphics[width=\textwidth]{Fig/merge_median.jpg}
-\end{minipage}
-\caption{Correction des artéfacts. De haut en bas : image de référence, puis corrigée avec les méthodes du minimum et de la médiane.}
-\label{mediane}
-\end{figure} 
+\includegraphics[width=0.6\textwidth]{../Images/Man_Right/16.jpg}\\
+\includegraphics[width=0.42\textwidth]{../Images/Brush/0.jpg}
+\includegraphics[width=0.42\textwidth]{../Images/Pink/30.jpg}
+\caption{images d'origine. Dans cette section nous travaillons avec respectivement 10, 4 et 2 photographies de chaque peinture.}
+\label{input}
+\end{figure}
+Les résultats varient légèrement selon les méthodes. La méthode du minimum élimine le mieux les reflets (figure~\ref{brushmin}). Elle présente également l'avantage d'être la seule à fonctionner avec seulement deux photographies. Cependant, elle est par nature très sensible aux données initiales. Ainsi, si le recalage n'est pas bon, cette méthode ne marche pas du tout. Ainsi, il est nécessaire d'ajouter un seuil pour sélectionner les images pouvant être fusionnées. Si le recalage a un nombre de points de correspondances en dessous du seuil, elle n'est pas prise en compte. Les résultats s'améliorent (figure~\ref{manmin}). \\
+\label{results}
+\begin{figure}
+\centering
+\includegraphics[width=0.48\textwidth]{Fig/brushmin2.png}
+\includegraphics[width=0.48\textwidth]{Fig/pinkmin.png}
+\caption{Elimination des reflets avec la méthode du minimum. Les reflets lambertiens sont très bien éliminés.}
+\label{brushmin}
+\end{figure}
+\begin{figure}
+\centering
+\includegraphics[width=0.48\textwidth]{Fig/manminwrong.png}
+\includegraphics[width=0.48\textwidth]{Fig/manmin.png}
+\caption{Méthode du minimum. A gauche, une image mal recalée fait échouer la fusion. A droite, seules les images bien recalées sont conservées. Bien que les reflets soient bien retirés, on observe une perte de détails sur les plis du manteau.}
+\label{manmin}
+\end{figure}
+Les méthodes de médiane présentent l'avantage d'être plus robustes à d'éventuels mauvais recalages. Elles éliminent cependant moins bien les reflets. Les résultats sont très proches (figures~\ref{med1}~et~\ref{med2}). La médiane canal par canal élimine le mieux les reflets. Nous n'observons pas de problème spécifique avec cette méthode ; les couleurs apparaissent toujours naturelles. Il reste cependant plus de reflets que la méthode par minimum.
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{Fig/brushmed.png}
+\includegraphics[width=0.8\textwidth]{Fig/brushmin2.png}
+\caption{Fusion par médiane. Haut : médiane canal par canal. Bas : méthode minimum (pour comparaison). Les autres médianes sont identiques à l'œuil à la première sur cet exemple. Plus de reflets persistent comparativement à la méthode du minimum (lampes en haut de l'image).}
+\label{med1}
+\end{figure}
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.45\textwidth]{Fig/manmed.png}
+\includegraphics[width=0.45\textwidth]{Fig/mantrue.png}
+\includegraphics[width=0.45\textwidth]{Fig/manlab.png}
+\includegraphics[width=0.45\textwidth]{Fig/mangrad.png}
+\caption{Fusion par médiane. Haut : médiane canal par canal, médiane vectorielle. Bas : dans l'espace CIELAB, dans l'espace gradient. Les détails sont mieux conservés que la méthode par minimum pour les trois premiers. La médiane canal par canal semble obtenir le résultat présentant le moins de reflets.}
+\label{med2}
+\end{figure}
+
 %------------------------------------------> SECTION Améliorations possibles
+\newpage
 \section{Améliorations possibles}
 
-Plusieurs amélioration de l'algorithme sont envisageables. Si les images obtenues sont de bonne qualité, l'algorithme ne sait pas faire la différence entre les zones de la peinture et les zones extérieures (cadre, mur, paysage, ...), dans lesquelles la fusion est effectuée alors qu'elle n'a pas de sens. Une possibilité pour détecter ces zones et de segmenter l'image de référence (par exemple en utilisant des snakes quadrangulaires) entre un "intérieur" sur lequel la fusion serait effectué et un extérieur sur lequel on garderait le contenu d'origine. Pour s'aider dans cette segmentation, nous pourrions utiliser les informations des autres photos du tableau.
+Plusieurs améliorations de l'algorithme sont envisageables. Si les images obtenues sont de bonne qualité, l'algorithme ne sait pas faire la différence entre les zones de la peinture et les zones extérieures (cadre, mur, paysage, ...), dans lesquelles la fusion est effectuée alors qu'elle n'a pas de sens. Une possibilité pour détecter ces zones et de segmenter l'image de référence (par exemple en utilisant des snakes quadrangulaires) entre un "intérieur" sur lequel la fusion serait effectué et un extérieur sur lequel on garderait le contenu d'origine. Pour s'aider dans cette segmentation, nous pourrions utiliser les informations des autres photos du tableau.
 
-De plus, l'algorithme que nous avons développé (en particulier la partie de fusion) n'est pas de fait résistant aux changements de contrastes en général. Une idée pour corriger ce défaut serait d'égaliser les histogrammes les différentes images (de préférence en limitant cette égalisation à la zone "intérieur" du tableau).
+De plus, l'algorithme que nous avons développé (en particulier la partie de fusion) n'est pas de fait résistant aux changements de contraste en général. Une idée pour corriger ce défaut serait d'égaliser les histogrammes les différentes images (de préférence en limitant cette égalisation à la zone "intérieur" du tableau).
 \bibliographystyle{plain}
 \bibliography{QUEEN}
 \end{document}

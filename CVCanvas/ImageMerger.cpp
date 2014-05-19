@@ -115,33 +115,6 @@ cv::Scalar_<uchar> minimum(std::vector<cv::Scalar_<uchar>> colors)
     }
     return res;
 }
-/**
- *  This function computes the median of the L component
- * and returns the corersponding LAB color
- *
- *  @param colors The colors in LAB
- *
- *  @return The median color
- */
-cv::Scalar_<uchar> labMedian(std::vector<cv::Scalar_<uchar>> colors)
-{
-	int bestIndex = -1;
-	float best = 0.f;
-	for(unsigned i=0; i < colors.size(); i++)
-	{
-		float sum = 0.f;
-		for(unsigned j=0; j < colors.size(); j++)
-		{
-			sum += abs(float(colors[i][0])-float(colors[j][0]));
-		}
-		if(bestIndex < 0 ||sum < best)
-		{
-			best=sum;
-			bestIndex = i;
-		}
-	}
-	return colors[bestIndex];
-}
 
 /**
  * merges the fitted images
@@ -164,11 +137,7 @@ cv::Mat merge(std::vector<cv::Mat> images, MergeStrategy strategy)
 		{
 			cv::Mat x;
 			cv::cvtColor(images[imag], x, CV_BGR2Lab);
-			std::vector<cv::Mat> channels(3);
-			cv::split(x, channels);
-			cv::imshow("jj", channels[0]);
-			cv::waitKey();
-			LabImages.push_back(channels[0]);
+			LabImages.push_back(x);
 		}
 		cv::Mat res(images[0].size(), images[0].type());
 		std::cout << res.rows << " " << res.cols << " " << res.dims << std::endl;
@@ -176,23 +145,17 @@ cv::Mat merge(std::vector<cv::Mat> images, MergeStrategy strategy)
         {
             for(int j = 0 ; j < res.rows ; j++)
             {
-                int index = -1;
-				uchar best;
-				for(unsigned imag = 0; imag < images.size(); imag++)
-				{
-					uchar current = LabImages[imag].at<uchar>(j,i);
-					if(index < 0 || current < best)
-					{
-						index = imag;
-						best=current;
-					}
-				}
-				res.at<cv::Scalar_<uchar>>(j,i) = images[index].at<cv::Scalar_<uchar>>(j,i);
+                std::vector<cv::Scalar_<uchar>> colors;
+                for (unsigned int k = 0; k < images.size(); k++) {
+                    colors.push_back(images[k].at<cv::Scalar_<uchar>>(j, i));
+                }
+				res.at<cv::Scalar_<uchar>>(j,i) = componentMedian(colors);
 			}
 		}
 		cv::Mat bgrRes;
+		cv::cvtColor(res, bgrRes, CV_Lab2BGR);
 		return res;
-	}
+	} else
 	{
         // Those strategies act pixel-per-pixel
         cv::Mat res(images[0].size(), images[0].type());

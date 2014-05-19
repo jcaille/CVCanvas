@@ -26,6 +26,7 @@ typedef enum MergeStrategy
     MEDIAN,
     VECTOR_MEDIAN,
     GRADIENT_MEDIAN,
+	LAB_MEDIAN,
 } MergeStrategy;
 
 /**

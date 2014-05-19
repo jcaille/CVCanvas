@@ -31,7 +31,7 @@ void fit(std::vector<cv::Mat>& inputImages, cv::Mat referenceImage, FitStrategy 
         {
             int inliers;
             cv::Mat fitted = siftFitter.fit(inputImages[i], inliers);
-            if(inliers > 100)
+            if(inliers > 40)
             {
                 // Only add the image if there is enough inliers
                 fittedImages.push_back(fitted);

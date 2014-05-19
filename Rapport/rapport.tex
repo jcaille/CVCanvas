@@ -15,7 +15,7 @@
 %----- En tête
 
 \title{Reconstruction d'un tableau sans reflets à partir de photos prises sous des angles différents}
-\date{13 Mars 2014}
+\date{16 Mai 2014}
 \author{Théophile DALENS et Jean CAILLÉ}
 
 \begin{document}
@@ -49,9 +49,7 @@ On peut à partir ce ces points trouver une perspective permettant de passer du 
 $$ \forall i \in \{1...4\}, q_i = M p_i $$
 
 Une fois que nous avons trouvé la matrice $M$, il est possible de redresser l'image pour que les deux quadrilatères coincides, en appliquant la perspective définie par M. \\
-
 Toutefois, il est peu probable que les valeurs de l'image de référence à échantilloner aient des coordonées entières (\emph{e.g.} des pixels). Nous devons donc pouvoir interpoler l'image de référence pour construire l'image redréssée. Plusieurs méthodes sont alors possible :
-
 \paragraph{Interpolation au plus proche}
 Pour trouver la valeur du pixel $(x,y)$ dans l'image de référence, on arrondi simplement les deux nombres pour tomber su un pixel. Cette méthode est simple à utiliser, mais moins précise que l'interpolation linéaire.
 
@@ -98,7 +96,7 @@ Il reste donc à trouver la matrice $M$ permettant de passer de l'image à recad
 
 $$ e = \sum_{i = 1}^{n}\|p_i - Mq_i\|^2$$
 
-Cependant, la présence de faux-positifs (\emph{i.e.} des paires de points qui ne correspondent pas d'une image à l'autre), il est nécessaire d'employer un algorithme plus robuste pour trouver cette homographie. La méthode RANSAC~\citep{fischler1981random} permet à la fois de filtrer les bonnes correspondances et d'obtenirs cette homographie. Cet algorithme itératif sélectionne un sous-ensemble de descripteurs aléatoirement et marque ces correspondances comme "bonnes". On cherche ensuite l'homographie la plus adaptée à cet ensemble de point (en minimisant l'erreur $e$ par exemple), puis on cherche les correspondances qui sont "d'accord" avec cette homographie (celle pour lesquelles l'erreur résiduelle est inféiruer à un certain seuil). Si suffisement de paires sont en accord avec l'homographie trouvée, elle est conservée, sinon, l'algorithme est relancé avec une nouvelle initialisation aléatoire.
+Cependant, la présence de faux-positifs (c'est-à-dire des paires de points qui ne correspondent pas d'une image à l'autre), il est nécessaire d'employer un algorithme plus robuste pour trouver cette homographie. La méthode RANSAC~\citep{fischler1981random} permet à la fois de filtrer les bonnes correspondances et d'obtenirs cette homographie. Cet algorithme itératif sélectionne un sous-ensemble de descripteurs aléatoirement et marque ces correspondances comme "bonnes". On cherche ensuite l'homographie la plus adaptée à cet ensemble de point (en minimisant l'erreur $e$ par exemple), puis on cherche les correspondances qui sont "d'accord" avec cette homographie (celle pour lesquelles l'erreur résiduelle est inféiruer à un certain seuil). Si suffisement de paires sont en accord avec l'homographie trouvée, elle est conservée, sinon, l'algorithme est relancé avec une nouvelle initialisation aléatoire.
 
 Cet algorithme est extrêment robuste et peut supporter un grand nombre de faux-positifs (jusqu'à 50\% dans certains cas). Toutefois, la convergence n'est pas forcément assurée. Il y'a également un certains nombres de paramètres dont les valeurs sont à ajuster en fonction du problèmes.
 
@@ -164,29 +162,93 @@ Une fois les images recalées, l'étape suivante est de fusionner les images ent
 \[
 J(x,y)=f\left(\tilde I_1(x,y), ..., \tilde I_n(x,y)\right)
 \]
-De nombreux choix sont possibles pour la fonction $f$. Dans la section~\ref{fusionmin}, nous proposons une fusion par minimum sur chaque canal de couleur. Nous proposons ensuite des fusions par médiane ; elle se fait par canal RGB dans la section~\ref{fusionmediane}, par médiane vectorielle dans la section~\ref{fusiontruemediane}, ou par une méthode légèrement différente dans un autre espace de couleur, détaillée dans la section~\ref{fusionlab}.\\
+De nombreux choix sont possibles pour la fonction $f$. Une première tentative a été de déterminer quels étaient les points des images qui devaient être corrigés, c'est-à-dire les points qui présentaient des reflets. Pour ce faire, nous avons tracé les courbes d'intensités comparées de deux images recalées (figure~\ref{itensitecompare}). 
+\begin{figure}
+\centering
+\includegraphics[width=0.45\textwidth]{Fig/compareintensities.png}
+\includegraphics[width=0.45\textwidth]{Fig/compareintensities_log.png}
+\caption{Courbes d'intensités comparées. Sur l'image de gauche, chaque point $(x,y)$ blanc correspond à l'existence d'un couple dont l'intensité est $x$ sur une image et $y$ sur l'autre. A droite, le nombre de points correspondant est sommé et passé en échelle logarithmique. En bleu, la droite d'équation $y=x$. Les points s'éloignant fortement de cet axe sont probablement des points présentant des reflets.}
+\label{itensitecompare}
+\end{figure}
+Ces courbes d'intensité montrent la complexité du problème ; même recalées, les images présentent des variations locales importantes d'intensité (la droite a une forte épaisseur). Ainsi, il est difficile de catégoriser les points présentant des reflets. La fonction $f$ doit donc prendre en compte tous les points. La moyenne arithmétique \\
+Dans la section~\ref{fusionmin}, nous proposons une fusion par minimum sur chaque canal de couleur. Nous proposons ensuite des fusions par médiane ; elle se fait par canal RGB dans la section~\ref{fusionmediane}, par médiane vectorielle dans la section~\ref{fusiontruemediane}, ou par une méthode légèrement différente dans un autre espace de couleur, détaillée dans la section~\ref{fusionlab}.\\
 Il est également possible de travailler dans l'espace gradient au lieu de l'espace de l'image. Dans ce cas, l'image fusionnée J est définie par
 \[
 \nabla J(x,y)=f\left(\nabla \tilde I_1(x,y), ..., \nabla \tilde I_n(x,y)\right)
 \]
-Ce cas est détaillé dans la section~\ref{fusiongrad}.
+Ce cas est détaillé dans la section~\ref{fusiongrad}. Les résultats obtenus par ces méthodes sont comparées dans la section~\ref{results}.
 %------------------------------------------------------------> SUB SUB SECTION Fusion par minimum
 \subsubsection{Fusion par minimum}
 \label{fusionmin}
-Pour cette méthode, nous faisons l'hypothèse que le les reflets ne font qu'ajouter de la luminosité aux différents pixels de l'image, et que les reflets ne peuvent se retrouver dans toutes les images. Dès lors, il suffit de prendre le minimum de chaque canal de couleur pour parvenir à éliminer les reflets.
+Pour cette méthode, nous faisons l'hypothèse que les reflets ne font qu'ajouter de la luminosité aux différents pixels de l'image, et que les reflets ne peuvent se retrouver dans toutes les images. Dès lors, il suffit de prendre le minimum de chaque canal de couleur pour parvenir à éliminer les reflets. En notant $R$, $G$ et $B$ les canaux de couleurs, on écrit
+\[
+J(x,y,c)=\min_{i=1..N}\tilde I_i(x,y,c) \quad \forall c \in \{R,G,B\}
+\]
+Cette méthode, bien que simple, élimine très efficacement les reflets lambertiens. Elle présente cependant le désavantage de donner des couleurs non naturelles, c'est-à-dire qu'elle ne garantit pas que les pixels de l'image $J$ ainsi obtenue proviennent des images d'origine. De plus, il est attendu que cette méthode assombrisse les images ; en particulier, d'éventuelles ombres se verront assez nettement avec cette méthode.
 %------------------------------------------------------------> SUB SUB SECTION Fusion par médianne vectorielle
 \subsubsection{Fusion par médiane car canal}
 \label{fusionmediane}
+Un autre choix possible pour la fonction est la médiane :
+\[
+J(x,y,c)=\underset{i=1..N}{\mathrm{median}}\tilde I_i(x,y,c) \quad \forall c \in \{R,G,B\}
+\]
+Ici, l'hypothèse faite est que les reflets se retrouvent sur moins de la moitié des pixels considérés. Elle est donc plus forte que l'hypothèse de la section précédente ; en particulier, cette méthode est inadaptée si une majorité des prises de vue sont semblables. Cependant, elle est plus robuste à des données très différentes des autres. 
 \subsubsection{Fusion par médiane vectorielle}
 \label{fusiontruemediane}
-Une autre façon consiste à voter, pixel par pixel, pour ce qui devrait être le pixel sans reflet. On suppose ici que le reflet se trouve dans moins de la moitié des images à un endroit donné. Deux méthodes sont alors possibles. On peut prendre la médiane des pixels, canaux de couleurs par canaux de couleurs. Cette méthode, simple et intuitive, à le désavantage, comme la méthode précédente, de mélanger les canaux couleurs d'images différentes, ce qui peut conduire à des couleurs non naturelles. Pour pallier à ce problème, nous avons également implémenté un équivalent de la médiane dans l'espace vectoriel des couleurs ; il s'agit du vecteur minimisant la somme de ses distances $L_1$ aux autres vecteurs. En pratique, nous n'observons pas de différences entre ces deux médianes. 
+La méthode précédente présente le désavantage de mélanger les canaux couleurs d'images différentes, ce qui peut conduire à des couleurs non naturelles. Pour pallier à ce problème, nous avons également implémenté un équivalent de la médiane dans l'espace vectoriel des couleurs, appelée "médiane vectorielle". En notant $(\mathbf{x}_i)_{i \in I}$ une liste de vecteurs, elle est définie par
+\[
+\mathrm{vecmedian}\left((\mathbf{x}_i)_{i \in I}\right) = \underset{i \in I}{\mathrm{argmin}} \sum_{j \in I} ||\mathbf{x}_i-\mathbf{x}_j||_1
+\]
+La norme $L_1$ est ici utilisée. Il est possible de vérifier que cette médiane est identique à la médiane classique lorsque le nombre de dimensions est 1. \\
+Ainsi, pour la fonction $f$ que nous choisissons est ici la fonction vecteur median :
+\[
+J(x,y)=\mathrm{vecmedian}\left(\tilde I_1(x,y), ..., \tilde I_n(x,y)\right)
+\]
+En toute rigueur, le vecteur médian n'est pas toujours défini. Il est possible en effet que plusieurs vecteurs $\mathbf{x}$ atteignent le minimum de la définition. En pratique, nous prenons soin de toujours sélectionner des vecteurs provenant de la même image en cas de conflit entre deux images ; ainsi, il n'y a pas de discontinuité dans l'image résultante liée à ce problème. Dans le cadre de la médiane canal par canal, si le nombre d'images est pair, nous utilisons la moyenne des deux scalaires pouvant convenir.
 \subsubsection{Fusion par médiane dans l'espace Lab}
 \label{fusionlab}
 %------------------------------------------------------------> SUB SUB SECTION Fusion dans l'espace gradient
 \subsubsection{Fusion dans l'espace gradient}
+\centering
 \label{fusiongrad}
-Enfin, une méthode décrite dans~\citep{haro2012photographing} permettant de réduire plus les reflets consiste à prendre la médiane vectorielle dans l'espace gradient des images. Pour ce faire, nous calculons les images gradients des images recalées, converties en niveau de gris, et nous en calculons la médiane vectorielle en chaque point. Ensuite, nous construisons les gradients de chaque canal de couleur de l'image fusionnée en prenant, pour chaque point et chaque canal, le gradient de l'image dont la médiane est issue. Ce sont donc bien les gradients des canaux de couleurs qui sont considérés.\\
-Lorsque l'on connait le gradient $F$ d'une image, il est possible de la retrouver en minimisant $\min||\mathrm{grad}I - F||$. Ceci se fait grâce à l'équation de Poisson $\Delta I = \mathrm{div}F$. Cette équation est alors résolue, canal par canal, en passant par la transformée de Fourier, s'inspirant de~\citep{morel2010pde}. Rencontrant des difficultés dans cette dernière étape, nous n'avons pas pu terminer cette méthode. Elle donne cependant d'excellents résultats dans~\citep{haro2012photographing}, éliminant certains reflets apparaissant dans une majorité d'images.
+Enfin, une méthode décrite dans~\citep{haro2012photographing} permettant de réduire plus les reflets consiste à prendre la médiane vectorielle dans l'espace gradient des images. Dans un premier temps, chaque image recalée $\tilde I$ est convertie en niveau de gris $tilde I^g$. Nous calculons ensuite le gradient de chacune de ces images. Nous en construisons une carte d'index, définie par
+\[
+a(i,j) = arg\underset{k}{\mathrm{vecmedian}}\nabla\tilde I_k(i,j)
+\]
+Cette carte nous sert à construire le gradient de l'image résultante en chaque canal :
+\[
+F(x,y,c) = \tilde \nabla I_{a(i,j)}(x,y,c)
+\]
+Pour chaque canal de couleur $c$, nous reconstruisons l'image $J$ qui devrait être telle que
+\[
+\nabla J(x,y,c) = F(x,y,c)
+\]
+Cependant, il est important de noter ici que $F$ n'est pas réellement le gradient d'une image, et, par conséquent, il est impossible de résoudre cette équation. Nous nous efforcerons de fait de minimiser
+\[
+||\nabla J - F||
+\]
+L'équation de Poisson s'écrit
+\[
+\Delta J = \div F
+\]
+c'est-à-dire, en chaque point,
+\[
+J(i+1,j)+J(i-1,j)+J(i,j+1)+J(i,j-1)-4J(i,j)=F(i,j)
+\]
+Pour la résoudre, nous procédons par une méthode itérative. Nous initialisons $J$ par
+\[J_0 = \tilde I_1\]
+et nous répétons, jusqu'à convergence, l'équation
+\[
+J_{n+1}(i,j) = \frac{1}{4}J_n(i+1,j)+J_n(i-1,j)+J_n(i,j+1)+J_n(i,j-1)-F(i,j)
+\]
+En pratique, une douzaine d'itérations suffit pour éliminer les reflets. Cependant, le système ne converge pas car $\div F$ n'est pas réellement un Laplacien. De fait, nous observons des zones d'instabilité assez marquées, qui détruisent progressivement l'image. Ces zones naissent plus rapidement aux endroits où le recalage d'images est perfectible. De fait, 
+, et nous en calculons la médiane vectorielle en chaque point. Ensuite, nous construisons les gradients de chaque canal de couleur de l'image fusionnée en prenant, pour chaque point et chaque canal, le gradient de l'image dont la médiane est issue. Ce sont donc bien les gradients des canaux de couleurs qui sont considérés.\\
+Lorsque l'on connait le gradient $F$ d'une image, il est possible de la retrouver en minimisant $\min||\mathrm{grad}I - F||$. Ceci se fait grâce à l'équation de Poisson $\Delta I = \mathrm{div}F$. Cette équation est alors résolue, canal par canal, en passant par la transformée de Fourier, s'inspirant de~\citep{morel2010pde}. Rencontrant des difficultés dans cette dernière étape, nous n'avons pas pu terminer cette méthode. Elle donne cependant d'excellents résultats dans~\citep{haro2012photographing}, éliminant certains reflets apparaissant dans une majorité d'images (voir figure~\ref{poissonfig}).
+\begin{figure}
+\includegraphics[width=0.6\textwidth]{Fig/poisson.png}
+\caption{Image fusionnée obtenue par la méthode des gradients médians. On aperçoit des zones saturées (blanches et noires) qui correspondent à des divergences dans la résolution de l'équation de Poisson. Ces zones correspondent aux zones où le recalage est imparfait.}
+\label{poissonfig}
+\end{figure}
 %------------------------------------------> SECTION Implémentation
 \section{Implémentation}
 
@@ -194,6 +256,7 @@ Pour l'implémentation de la méthode décrite ci-dessus, nous avons choisi des 
 
 %------------------------------------------> SECTION Résultats
 \section{Résultats}
+\label{results}
 Les résultats varient peu selon les méthodes (figure~\ref{mediane}). Les médianes permettent de retirer de nombreux artéfacts de reflets, mais ne fonctionnent pas là où une majorité d'images présentent des artéfacts. Les méthodes de médiane, canal par canal ou globale, donnent les mêmes résultats sur les exemples que nous avons essayés.
 \begin{figure}
 \centering

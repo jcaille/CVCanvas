@@ -24,11 +24,11 @@
 // The implementartion has been divided in multiple classes and files to be easy to use
 // Everything can be configured with those arguments :
 
-ImageLoaderSet set = BRUSH_ALL;
+ImageLoaderSet set = ImageLoaderSet::BRUSH_ALL;
 
 FitStrategy fitStrategy = SIFT;
 
-MergeStrategy mergeStrategy = GRADIENT_MEDIAN;
+MergeStrategy mergeStrategy = MergeStrategy::GRADIENT_MEDIAN;
 
 int main(int argc, const char * argv[])
 {
@@ -54,7 +54,7 @@ int main(int argc, const char * argv[])
     cv::imshow("Merge", merged);
 
     std::cout << "Done" << std::endl;
-    cv::imwrite("/tmp/merge.png", merged);
+    cv::imwrite("merge.png", merged);
 
     cv::waitKey();
     

@@ -99,7 +99,7 @@ cv::Scalar_<uchar> average(std::vector<cv::Scalar_<uchar>> colors)
  *
  *  @param colors The colors
  *
- *  @return The average color
+ *  @return The minimum color
  */
 cv::Scalar_<uchar> minimum(std::vector<cv::Scalar_<uchar>> colors)
 {
@@ -115,13 +115,85 @@ cv::Scalar_<uchar> minimum(std::vector<cv::Scalar_<uchar>> colors)
     }
     return res;
 }
+/**
+ *  This function computes the median of the L component
+ * and returns the corersponding LAB color
+ *
+ *  @param colors The colors in LAB
+ *
+ *  @return The median color
+ */
+cv::Scalar_<uchar> labMedian(std::vector<cv::Scalar_<uchar>> colors)
+{
+	int bestIndex = -1;
+	float best = 0.f;
+	for(unsigned i=0; i < colors.size(); i++)
+	{
+		float sum = 0.f;
+		for(unsigned j=0; j < colors.size(); j++)
+		{
+			sum += abs(float(colors[i][0])-float(colors[j][0]));
+		}
+		if(bestIndex < 0 ||sum < best)
+		{
+			best=sum;
+			bestIndex = i;
+		}
+	}
+	return colors[bestIndex];
+}
 
+/**
+ * merges the fitted images
+ *
+ * @param
+ * images: the fitted images
+ * strategy: AVERAGE, MEDIAN, VECTOR_MEDIAN, MINIMUM, GRADIENT_MEDIAN, LAB_MEDIAN
+ * 
+ * @return: the merged image
+ **/
 cv::Mat merge(std::vector<cv::Mat> images, MergeStrategy strategy)
 {
     if (strategy == GRADIENT_MEDIAN) {
         GradientMedianMerger tmm(images);
         return tmm.output;
-    } else {
+    } else if (strategy== LAB_MEDIAN)
+	{
+		std::vector<cv::Mat> LabImages;
+		for(unsigned imag = 0; imag<images.size(); imag++)
+		{
+			cv::Mat x;
+			cv::cvtColor(images[imag], x, CV_BGR2Lab);
+			std::vector<cv::Mat> channels(3);
+			cv::split(x, channels);
+			cv::imshow("jj", channels[0]);
+			cv::waitKey();
+			LabImages.push_back(channels[0]);
+		}
+		cv::Mat res(images[0].size(), images[0].type());
+		std::cout << res.rows << " " << res.cols << " " << res.dims << std::endl;
+        for (int i = 0; i < res.cols; i++)
+        {
+            for(int j = 0 ; j < res.rows ; j++)
+            {
+                int index = -1;
+				uchar best;
+				for(unsigned imag = 0; imag < images.size(); imag++)
+				{
+					uchar current = LabImages[imag].at<uchar>(j,i);
+					if(index < 0 || current < best)
+					{
+						index = imag;
+						best=current;
+					}
+				}
+				res.at<cv::Scalar_<uchar>>(j,i) = images[index].at<cv::Scalar_<uchar>>(j,i);
+			}
+		}
+		cv::Mat bgrRes;
+		return res;
+	}
+	{
         // Those strategies act pixel-per-pixel
         cv::Mat res(images[0].size(), images[0].type());
         

@@ -26,7 +26,7 @@ The method used calls for two steps : Fitting and Merging. We have implemented s
 	* `MINIMUM`: For each pixel, each channel is set to the minimum value of this channel in all image
 	* `MEDIAN`: For each pixel, each channel is set to the median value of this channel in all images
 	* `VECTOR_MEDIAN`: Set each pixel to the median values of the corresponding pixels.
-	* `GRADIENT_MEDIAN`: Median merging. Not implemented yet.
+	* `GRADIENT_MEDIAN`: Gradient median merging, using Poisson equation
 
 ## Results
 
